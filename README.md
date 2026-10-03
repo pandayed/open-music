@@ -1,6 +1,6 @@
 # Nerdboard
 
-Desktop virtual guitar, piano, and drums played with a physical keyboard. Built with React, TypeScript, Vite, CSS, and the Web Audio API. Choose an instrument in the header; switching stops the previous instrument and its keyboard listeners.
+Desktop virtual guitar, piano, drums, synthesizer, and harmonium played with a physical keyboard. Built with React, TypeScript, Vite, CSS, and the Web Audio API. Choose an instrument in the header; switching stops the previous instrument and its keyboard listeners.
 
 ```bash
 npm install
@@ -43,3 +43,39 @@ The piano uses a synthesized hammer strike and decaying harmonics, not recorded 
 - `Escape` or **Stop all** silences the kit. Window blur, tab hiding, and instrument switching also stop sound.
 
 The kit uses synthesized percussion, not recorded acoustic drum samples. Generated sounds are cached and simultaneous voices are capped.
+
+## Synthesizer
+
+- Opens with an **Alors-style pluck** preset: an original synthesized approximation of the opening sound in Stromae's *Alors on danse*.
+- Uses the piano's white/black key mapping and mouse controls. Starts at C3–E4; `←` / `→` move the starting octave from C2 to C6.
+- Mono playing: each new note takes over; held keys naturally decay. Release and press a key again to retrigger it. Enter/Space activates a focused key as a short note.
+- **Brightness**, **Decay**, and **Echo** affect the next note. Echo adds one repeat at a fixed eighth-note delay of about 246 ms (122 BPM).
+- **Reset preset** restores the starting tone and C3 octave. `Escape`, **Stop all**, blur, tab hiding, and instrument switching clear notes and echoes.
+
+The original opening bass sound was played through Reason's NN-19 sampler, as shown in [Stromae's Reason interview](https://www.reasonstudios.com/news/post/stromae). This app uses two pulse oscillators, a triangle sub, a closing low-pass filter, and a short gain envelope, informed by [Syntorial's pluck remake](https://www.syntorial.com/preset-recipe/stromae-alors-on-danse-pluck/). It does not include the original sample, saxophone, drum backing, or song playback.
+
+## Harmonium
+
+- Uses the piano's white/black key mapping. Starts at C3–E4; `←` / `→` move the starting octave from C2 through C6. Hold several notes together for chords. Changing octave releases notes.
+- **Manual pump** is the starting mode. Hold `Space` while holding note keys, or hold the **Hold to pump** button, to build air pressure. When you stop pumping, air fades out. Without air, held notes are silent.
+- **Steady air** maintains a 65% supply so you can play with both hands without pumping.
+- **Hinge bellows** starts disabled until you connect. No external sensor, cable, native installation, or macOS switch is needed. **Connect lid sensor** opens the browser's device chooser. On a compatible MacBook, select **las** if listed, or the Apple lid-angle sensor, then click the popup's **Connect / Pair** button. A successful connection normally selects **Hinge bellows**; move the lid gently while holding notes to supply air. You can switch back to manual or steady air while keeping the sensor connected for diagnostics.
+- The sensor panel displays actual angle readings, the last interval, recent update rate, and reading age. The pressure model uses actual reported angle changes; it does not invent higher-frequency sensor samples. A low update rate may make hinge playing delayed or miss movements between samples.
+- The browser path requires WebHID (for example, desktop Chrome/Edge), a compatible Apple lid-angle sensor, and HTTPS or localhost. Safari/Firefox and hardware without that sensor can still use manual or steady air. Hardware compatibility and responsiveness must be checked on your own machine.
+- Focused buttons retain keyboard activation. Hold Enter/Space on the pump button to pump; Enter/Space on a note button plays a short note. Space on other focused buttons activates them instead of pumping.
+- `Escape`, **Stop all**, window blur, and tab hiding stop notes, empty the air reservoir, and return to Manual pump. They keep an existing sensor connection available; **Disconnect** or instrument switching closes it. Selecting Hinge bellows again starts a fresh movement baseline.
+
+The harmonium generates an original sustained reed approximation locally, with two subtly detuned harmonic reeds per note, a smooth pressure-controlled gain, and a bounded voice count. It includes no downloaded harmonium recordings or native helper. Inspired by [Hingemonium](https://github.com/Rocktopus101/Hingemonium); the direct browser input-report approach is also demonstrated in [LidPerspective](https://github.com/TANG617/LidPerspective) and [iPhone Solo](https://github.com/soloiaros/iphone-solo). Our sensor adapter only opens the selected sensor and listens to input reports; it does not write feature/output reports or change system settings. Browser permission is requested only when you click Connect.
+
+The **Built-in lid sensor** panel includes visible check/connect/disable steps, troubleshooting, saved-permission removal, and an optional read-only macOS hardware check. A changing angle verifies actual readings; an enabled Connect button only verifies browser support and the page's secure context. An empty chooser does not prove the hardware is absent.
+
+**Disconnect** closes the active connection but keeps the browser grant. To remove the grant in Chrome, click the site information icon left of the address, find the HID device / las entry, and click Remove. Reload this page before granting access again. If requests are blocked, check Chrome **Settings → Privacy and security → Site settings → Additional permissions → HID devices**; managed restrictions require the administrator. See [Chrome's device permission guide](https://support.google.com/chrome/answer/12576972?hl=en). The app does not change these browser settings.
+
+### Manual verification
+
+1. Run `npm run dev`, open the printed localhost URL on a desktop, and select **Harmonium**.
+2. Choose **Steady air**, hold `A D G`, and release the keys. Confirm the chord sustains while held and stops after release. Check octave changes and keyboard/mouse note holds.
+3. Select **Manual pump**. Hold `A` and `Space`; confirm pressure and volume rise. Release Space and keep A held; confirm both fade. Repeat with the pump button.
+4. Click **Connect lid sensor** and explicitly select the sensor. Move the lid gently and check angle, interval, rate, and pressure. Judge whether the response is usable; the code/build alone cannot establish this.
+5. Cancel the chooser, disconnect/reconnect, press Escape, switch instruments, leave the window, and hide the tab. Confirm notes do not stick, pressure resets, and switching closes the sensor connection.
+6. In a browser without WebHID, confirm the sensor panel explains its unavailability and manual/steady air still work. No OS or browser flags should need changing for these fallbacks.

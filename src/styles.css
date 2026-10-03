@@ -242,6 +242,82 @@ footer { display: flex; justify-content: space-between; padding: 19px 0 24px; co
 .drum-control-example .keycap { min-width: 28px; height: 30px; flex: none; font-size: 11px; }
 .drum-example-arrow { color: #bca17e; }
 
+.synth-instrument { background: linear-gradient(120deg, #292c25, #171e1a 55%, #242b23); }
+.synth-panel { display: grid; grid-template-columns: 1fr 1.25fr; align-items: center; gap: 32px; padding: 24px 0; }
+.synth-kicker { color: #bca17e; font-size: 9px; font-weight: 800; letter-spacing: .16em; }
+.synth-preset h1 { margin: 7px 0 8px; font-family: Georgia, serif; font-size: 29px; font-weight: 400; letter-spacing: -.025em; }
+.synth-preset p { max-width: 380px; margin-bottom: 13px; color: #a5ac9e; font-size: 11px; line-height: 1.7; }
+.synth-reset { font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+.synth-tone-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 22px; border: 1px solid #3e4b3e; background: #111913; }
+.synth-slider { display: grid; gap: 14px; min-width: 0; color: #aebba5; font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.synth-slider > span:first-child { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; }
+.synth-slider output { color: #e9c28d; }
+.synth-slider input { width: 100%; margin: 0; accent-color: #d5aa77; cursor: pointer; }
+.synth-slider input:focus-visible { outline: 2px solid #ebc28e; outline-offset: 4px; }
+.synth-slider-hint { color: #798970; font-size: 8px; letter-spacing: .06em; }
+.synth-source-note { margin: 15px 0 0; max-width: 840px; color: #889380; font-size: 11px; line-height: 1.7; }
+.synth-source-note a { color: #c5ab87; text-underline-offset: 3px; }
+
+.harmonium-instrument { background: linear-gradient(120deg, #392f22, #201f17 55%, #30291d); }
+.harmonium-panel { display: grid; grid-template-columns: 1.15fr 1fr; gap: 36px; padding: 24px 0; }
+.harmonium-modes { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+.harmonium-modes .piano-action { font-size: 11px; }
+.harmonium-modes .piano-action[aria-pressed="true"] { border-color: #ba9564; color: #f1cea0; background: #423624; }
+.harmonium-mode-hint, .harmonium-pressure p { margin: 0 0 12px; color: #b5ad9b; font-size: 11px; line-height: 1.65; }
+.harmonium-pump { min-width: 175px; height: 38px; font-size: 10px; font-weight: 800; letter-spacing: .08em; touch-action: none; user-select: none; }
+.harmonium-pump span { color: #aa977c; font-size: 9px; }
+.harmonium-pump.is-pumping { background: #5e472b; border-color: #d1a36e; color: #f6d3a1; }
+.harmonium-pressure { padding: 17px 20px 4px; border: 1px solid #514533; background: #191b14; }
+.harmonium-pressure-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #adad99; font-size: 9px; font-weight: 800; letter-spacing: .13em; }
+.harmonium-pressure-heading output { color: #efc88f; font-family: Georgia, serif; font-size: 24px; font-weight: 400; letter-spacing: 0; }
+.harmonium-air-meter { height: 7px; overflow: hidden; margin: 10px 0 15px; border-radius: 4px; background: #393a2c; }
+.harmonium-air-meter > span { display: block; height: 100%; background: #d9ac73; }
+.harmonium-folds { display: flex; gap: calc(2px + var(--air) * 9px); height: 40px; margin-bottom: 12px; }
+.harmonium-folds span { flex: 1; border: 1px solid #8f7652; border-bottom: 3px solid #685337; background: linear-gradient(90deg, #241e17, #665135 50%, #34291d); }
+.harmonium-sensor { margin: 4px 0 20px; padding: 20px 24px; border: 1px solid #3f4538; background: #171c16; }
+.harmonium-sensor-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.harmonium-sensor-heading h2 { margin: 5px 0 0; font-family: Georgia, serif; font-weight: 400; font-size: 24px; }
+.harmonium-sensor-actions { display: flex; gap: 8px; }
+.harmonium-sensor-actions .piano-action { font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+.harmonium-sensor-status { margin: 12px 0 16px; color: #cbc4b2; font-size: 12px; line-height: 1.6; }
+.harmonium-diagnostics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 14px; border: 1px solid #343c2e; background: #11160f; }
+.harmonium-diagnostics > div { min-width: 0; padding: 13px 17px; }
+.harmonium-diagnostics > div + div { border-left: 1px solid #343c2e; }
+.harmonium-diagnostics dt { color: #91a084; font-size: 8px; font-weight: 800; letter-spacing: .12em; }
+.harmonium-diagnostics dd { margin: 7px 0 0; color: #e0bd8c; font-variant-numeric: tabular-nums; font-size: 20px; }
+.harmonium-sensor-note { margin: 0; max-width: 900px; color: #8f9a86; font-size: 11px; line-height: 1.7; }
+.harmonium-hinge-help { margin: -3px 0 12px; color: #c6b59a; font-size: 11px; line-height: 1.6; }
+.harmonium-hinge-help a, .harmonium-setup-guide a { color: #e0bc8e; text-underline-offset: 3px; }
+.harmonium-sensor { scroll-margin-top: 20px; }
+.harmonium-setup-guide { margin-bottom: 20px; font-size: 12px; line-height: 1.65; color: #aeb6a6; }
+.harmonium-setup-guide strong { color: #e1d8c6; font-weight: 700; }
+.harmonium-setup-intro { border-left: 3px solid #b6915e; padding: 10px 14px; background: #25281d; }
+.harmonium-setup-intro > strong { font-family: Georgia, serif; font-size: 19px; font-weight: 400; }
+.harmonium-setup-intro p { margin: 4px 0 0; }
+.harmonium-setup-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+.harmonium-setup-card { min-width: 0; padding: 15px; border: 1px solid #394231; background: #11170f; }
+.harmonium-setup-card h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; color: #e0c59e; font-size: 14px; font-weight: 700; }
+.harmonium-setup-card h3 span { display: grid; place-items: center; width: 23px; height: 23px; flex: none; border: 1px solid #726143; border-radius: 50%; font-size: 11px; }
+.harmonium-setup-guide ol { margin: 0; padding-left: 19px; }
+.harmonium-setup-guide li + li { margin-top: 9px; }
+.harmonium-setup-guide code { color: #ddc6a4; font-size: 11px; overflow-wrap: anywhere; }
+.harmonium-setup-details { margin-top: 8px; padding: 0 14px; border: 1px solid #394231; background: #131a11; }
+.harmonium-setup-details summary { padding: 11px 0; cursor: pointer; color: #d3c2a6; font-weight: 700; }
+.harmonium-setup-details[open] { padding-bottom: 14px; }
+.harmonium-setup-details p { margin: 10px 0 0; }
+.harmonium-setup-details pre { overflow-x: auto; margin: 10px 0; padding: 12px; border: 1px solid #37402e; background: #0c120b; }
+.harmonium-setup-table { width: 100%; border-collapse: collapse; text-align: left; }
+.harmonium-setup-table th, .harmonium-setup-table td { padding: 10px 12px; border: 1px solid #37402e; vertical-align: top; }
+.harmonium-setup-table th { background: #242b1f; color: #d9c5a5; }
+.harmonium-setup-table td:first-child { width: 26%; color: #d4d4c5; }
+.harmonium-setup-details summary:focus-visible, .harmonium-setup-guide a:focus-visible, .harmonium-hinge-help a:focus-visible { outline: 2px solid #ebc28e; outline-offset: 3px; }
+
+@media (min-width: 980px) and (max-width: 1240px) {
+  .site-header { min-height: 106px; height: auto; flex-wrap: wrap; gap: 10px 20px; padding: 12px 0; }
+  .site-header .instrument-switcher { order: 3; width: 100%; }
+  .instrument-switcher button { flex: 1; justify-content: center; padding: 9px 12px; gap: 6px; }
+}
+
 @media (max-width: 1240px) {
   .desktop-experience { padding: 0 32px; }
   .control-group { padding-left: 16px; padding-right: 16px; }

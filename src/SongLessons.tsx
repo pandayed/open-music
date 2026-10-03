@@ -75,13 +75,29 @@ const drumLessons: SongLesson[] = [
   },
 ];
 
+// Opening pluck, adapted to a C2/C3 practice register. Octave steps preserve
+// the upward jumps while fitting the synth's 17-key keyboard.
+const synthLessons: SongLesson[] = [
+  {
+    title: "Alors on danse",
+    detail: "OPENING PLUCK · START AT C2",
+    instruction: "From the default C3 octave, press ← once to start at C2. Play both rows in order, following the octave arrows, then repeat. Use short taps; release each key before pressing it again.",
+    phrases: [
+      { label: "C2", steps: ["G♯2:Y", "C♯3:O", "Octave C3:→"].map(step) },
+      { label: "C3", steps: ["G♯3:Y", "G♯3:Y", "G♯3:Y", "E3:D", "A3:H", "D♯3:E", "D♯3:E", "D♯3:E", "Octave C2:←"].map(step) },
+    ],
+  },
+];
+
 function step(value: string): LessonStep {
   const [label, key] = value.split(":");
   return { value: label, key };
 }
 
 export function SongLessons({ instrument }: { instrument: Instrument }) {
-  const lessons = instrument === "piano" ? pianoLessons : instrument === "guitar" ? guitarLessons : drumLessons;
+  const lessons = instrument === "piano" ? pianoLessons
+    : instrument === "guitar" ? guitarLessons
+    : instrument === "synth" ? synthLessons : drumLessons;
 
   return (
     <section className="song-lessons" aria-label={`${instrument} song lessons`}>
@@ -113,7 +129,7 @@ export function SongLessons({ instrument }: { instrument: Instrument }) {
               ))}
             </div>
             <p className="song-lesson-footer">
-              {instrument === "piano" ? "NOTE : KEYBOARD KEY" : instrument === "guitar" ? "CHORD : CHORD KEY" : "SOUND : PAD KEY"}
+              {instrument === "piano" || instrument === "synth" ? "NOTE : KEYBOARD KEY" : instrument === "guitar" ? "CHORD : CHORD KEY" : "SOUND : PAD KEY"}
             </p>
           </article>
         ))}
