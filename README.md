@@ -1,6 +1,6 @@
 # Nerdboard
 
-Desktop virtual guitar, piano, drums, synthesizer, and harmonium played with a physical keyboard. Built with React, TypeScript, Vite, CSS, and the Web Audio API. Choose an instrument in the header; switching stops the previous instrument and its keyboard listeners.
+Desktop virtual guitar, piano, drums, synthesizer, harmonium, and tabla played with a physical keyboard. Built with React, TypeScript, Vite, CSS, and the Web Audio API. Choose an instrument in the header; switching stops the previous instrument and its keyboard listeners.
 
 ```bash
 npm install
@@ -43,6 +43,20 @@ The piano uses a synthesized hammer strike and decaying harmonics, not recorded 
 - `Escape` or **Stop all** silences the kit. Window blur, tab hiding, and instrument switching also stop sound.
 
 The kit uses synthesized percussion, not recorded acoustic drum samples. Generated sounds are cached and simultaneous voices are capped.
+
+## Tabla
+
+- `A S D F`: Na, Tin, Tun, Te on the dayan (treble drum).
+- `J K`: Ge, Ke on the bayan (bass drum).
+- `L`: Dha (Na + Ge). `;`: Dhin (Tin + Ge). Combined strokes sound both drums with one key; individual keys can also be played together.
+- Tap a key or click a pad. Na, Tin, Tun, and Ge ring out; Te and Ke are short and muted. Release and press again to repeat a stroke; holding a key ignores auto-repeat.
+- Pads flash on each hit, with indicators while the sound rings. Focus a pad with Tab and use Enter/Space to strike it.
+- Two visible practice loops show stroke names and keyboard keys. Play one stroke per beat at your own pace; these are short exercises rather than full traditional taal lessons.
+- `Escape` or **Stop all** silences the tabla. Window blur, tab hiding, and instrument switching also stop sound.
+
+The tabla uses original synthesized approximations of ringing treble, resonant bass, and damped strokes; it includes no acoustic recordings or audio downloads. Generated buffers and simultaneous voices are bounded. Stroke terminology varies by tradition; this mapping is informed by [David Courtney's tabla bol guide](https://chandrakantha.com/music-and-dance/instrumental-music/indian-instruments/tabla/tabla-basic-strokes-bols/). It does not simulate full hand technique or continuous bayan pressure bends.
+
+To verify manually, select **Tabla**, try all eight keys and mouse pads, play `A + J` together and compare with `L`, then try the practice loops. Confirm repeated taps work, holding keys does not retrigger, Escape stops ringing, and switching away/back leaves no old notes or keyboard listeners. Browser playback and acoustic realism must be judged by listening.
 
 ## Synthesizer
 

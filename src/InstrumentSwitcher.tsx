@@ -1,4 +1,4 @@
-export type Instrument = "guitar" | "piano" | "drums" | "synth" | "harmonium";
+export type Instrument = "guitar" | "piano" | "drums" | "synth" | "harmonium" | "tabla";
 
 export function InstrumentSwitcher({ selected, onSelect }: {
   selected: Instrument;
@@ -25,6 +25,9 @@ export function InstrumentSwitcher({ selected, onSelect }: {
       </button>
       <button type="button" aria-pressed={selected === "harmonium"} onClick={() => onSelect("harmonium")}>
         <span>05</span> Harmonium
+      </button>
+      <button type="button" aria-pressed={selected === "tabla"} onClick={() => onSelect("tabla")}>
+        <span>06</span> Tabla
       </button>
     </nav>
   );

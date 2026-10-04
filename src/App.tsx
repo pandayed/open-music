@@ -4,6 +4,7 @@ import Piano from "./piano/Piano";
 import Drums from "./drums/Drums";
 import Synth from "./synth/Synth";
 import Harmonium from "./harmonium/Harmonium";
+import Tabla from "./tabla/Tabla";
 import type { Instrument } from "./InstrumentSwitcher";
 
 export default function App() {
@@ -13,5 +14,6 @@ export default function App() {
   if (instrument === "piano") return <Piano onSelectInstrument={setInstrument} />;
   if (instrument === "synth") return <Synth onSelectInstrument={setInstrument} />;
   if (instrument === "harmonium") return <Harmonium onSelectInstrument={setInstrument} />;
+  if (instrument === "tabla") return <Tabla onSelectInstrument={setInstrument} />;
   return <Drums onSelectInstrument={setInstrument} />;
 }
