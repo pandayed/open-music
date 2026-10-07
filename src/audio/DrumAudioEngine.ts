@@ -1,3 +1,4 @@
+import { connectAudioOutput } from "./output";
 import { DRUM_PADS, type DrumId } from "../drums/model";
 
 const VOICE_LIMIT = 32;
@@ -27,6 +28,7 @@ type DrumVoice = {
 /** Finite synthesized hits: no samples to download and no key-release envelope. */
 export class DrumAudioEngine {
   private context: AudioContext | null = null;
+  private disconnectOutput: (() => void) | null = null;
   private master: GainNode | null = null;
   private limiter: WaveShaperNode | null = null;
   private readonly voices = new Map<string, DrumVoice>();
@@ -36,6 +38,16 @@ export class DrumAudioEngine {
   private disposed = false;
 
   constructor(private readonly onVoiceEnd?: (id: string) => void) {}
+
+  async activate(): Promise<boolean> {
+    if (this.disposed) return false;
+    const context = this.getContext();
+    if (!context || context.state === "closed") return false;
+    try {
+      if (context.state === "suspended") await context.resume();
+      return context.state === "running";
+    } catch { return false; }
+  }
 
   play(id: string, drum: DrumId): boolean {
     if (this.disposed || !DRUM_PADS.some((pad) => pad.id === drum)) return false;
@@ -106,6 +118,8 @@ export class DrumAudioEngine {
     this.voices.clear();
     for (const voice of [...this.connectedVoices]) this.stopImmediately(voice);
     this.sampleCache.clear();
+    this.disconnectOutput?.();
+    this.disconnectOutput = null;
     this.master?.disconnect();
     this.limiter?.disconnect();
     if (this.context && this.context.state !== "closed") {
@@ -132,7 +146,8 @@ export class DrumAudioEngine {
           : Math.sign(value) * (0.6 + 0.3 * Math.tanh((magnitude - 0.6) / 0.3));
       }
       limiter.curve = curve;
-      master.connect(limiter).connect(context.destination);
+      master.connect(limiter);
+      this.disconnectOutput = connectAudioOutput(context, limiter);
       this.context = context;
       this.master = master;
       this.limiter = limiter;

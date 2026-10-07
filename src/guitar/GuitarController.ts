@@ -1,5 +1,7 @@
+import { STOP_SOUND_EVENT } from "../studioEvents";
 import { GuitarAudioEngine } from "../audio/GuitarAudioEngine";
 import { CHORDS, FRETS, STRINGS } from "./model";
+import { publishPerformance } from "../practice/events";
 
 export type PlayedNote = {
   id: string;
@@ -49,6 +51,7 @@ export class GuitarController {
   getSnapshot = (): GuitarSnapshot => this.snapshot;
 
   attach(): void {
+    window.addEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.stopAll);
@@ -56,6 +59,7 @@ export class GuitarController {
   }
 
   dispose(): void {
+    window.removeEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.stopAll);
@@ -84,12 +88,13 @@ export class GuitarController {
 
   private onKeyDown = (event: KeyboardEvent): void => {
     const { code } = event;
-    if (event.metaKey || event.ctrlKey || event.altKey || this.isTextTarget(event.target)) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || this.isTextTarget(event.target)) return;
     if (code === "Escape") {
       this.stopAll();
       return;
     }
     if (!this.isMapped(code)) return;
+    if (code === "Space" && event.target instanceof HTMLElement && event.target.closest("button, a")) return;
     event.preventDefault();
     if (event.repeat || this.pressed.has(code)) return;
     this.pressed.add(code);
@@ -160,6 +165,7 @@ export class GuitarController {
     this.notes.set(id, note);
     this.stringVoices.set(stringIndex, id);
     this.engine.play(id, stringIndex, fret, delaySeconds);
+    if (triggerCode !== "Space") publishPerformance("guitar", `string-${stringIndex}`);
     this.hasPlayed = true;
 
     if (delaySeconds > 0) {
@@ -173,6 +179,8 @@ export class GuitarController {
   }
 
   private strum(upstroke: boolean): void {
+    const chord = CHORDS.find((item) => item.code === this.heldChords.at(-1));
+    publishPerformance("guitar", chord?.name ?? "open");
     this.stroke = upstroke ? "up" : "down";
     const order = upstroke ? [5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5];
     order.forEach((stringIndex, index) => this.pluck(stringIndex, "Space", index * 0.019));

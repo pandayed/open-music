@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { PointerEvent } from "react";
-import { InstrumentSwitcher } from "./InstrumentSwitcher";
-import type { Instrument } from "./InstrumentSwitcher";
-import { SongLessons } from "./SongLessons";
 import { GuitarController } from "./guitar/GuitarController";
 import { CHORDS, FRETS, STRINGS, noteName } from "./guitar/model";
 
@@ -20,7 +17,7 @@ function Keycap({ children, active = false, wide = false }: { children: string; 
   return <span className={`keycap${active ? " is-active" : ""}${wide ? " is-wide" : ""}`}>{children}</span>;
 }
 
-export default function Guitar({ onSelectInstrument }: { onSelectInstrument: (instrument: Instrument) => void }) {
+export default function Guitar() {
   const controller = useMemo(() => new GuitarController(), []);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   const [dragging, setDragging] = useState(false);
@@ -59,11 +56,9 @@ export default function Guitar({ onSelectInstrument }: { onSelectInstrument: (in
       </div>
 
       <div className="desktop-experience">
-        <header className="site-header">
-          <div className="brand"><span className="brand-mark"><GuitarMark /></span><span>NERDBOARD<span className="brand-period">.</span></span></div>
-          <InstrumentSwitcher selected="guitar" onSelect={onSelectInstrument} />
+        <div className="instrument-audio-state">
           <div className={`audio-status${state.hasPlayed ? " is-live" : ""}`}><span className="status-dot" />{state.hasPlayed ? "AUDIO LIVE" : "PRESS A KEY TO BEGIN"}</div>
-        </header>
+        </div>
 
         <main>
           <section className="instrument-section" aria-label="Virtual guitar">
@@ -164,11 +159,7 @@ export default function Guitar({ onSelectInstrument }: { onSelectInstrument: (in
               <div className="gesture gesture-bend"><span className="drag-icon">↔</span><span>DRAG ON THE NECK TO BEND</span></div>
             </div>
           </section>
-
-          <SongLessons instrument="guitar" />
         </main>
-
-        <footer><span>NERDBOARD / EXPERIMENT 001</span><span>PLAY IT LOUD. PLAY IT YOUR WAY.</span></footer>
       </div>
     </div>
   );

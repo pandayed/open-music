@@ -1,5 +1,9 @@
+import { STOP_SOUND_EVENT } from "../studioEvents";
 import { PianoAudioEngine } from "../audio/PianoAudioEngine";
-import { MAX_OCTAVE, MIN_OCTAVE, PIANO_KEYS, pianoMidi } from "./model";
+import { MAX_OCTAVE, MIN_OCTAVE, PIANO_KEYS, pianoMidi, isPianoMidi } from "./model";
+import { isRangeShortcut, readOctave, readRangeShortcuts, writePreference } from "../preferences";
+import type { RangeShortcuts } from "../preferences";
+import { publishPerformance } from "../practice/events";
 
 type PianoNote = { id: string; midi: number; held: boolean };
 
@@ -9,6 +13,7 @@ export type PianoSnapshot = {
   sustain: boolean;
   hasPlayed: boolean;
   audioUnavailable: boolean;
+  shortcuts: RangeShortcuts;
 };
 
 /** Owns note holds and the pedal, independently of how a note was pressed. */
@@ -20,13 +25,14 @@ export class PianoController {
   private readonly heldVoices = new Map<string, string>();
   private readonly taps = new Set<ReturnType<typeof setTimeout>>();
   private serial = 0;
-  private octave = 4;
+  private octave = readOctave("piano", 4, MIN_OCTAVE, MAX_OCTAVE);
+  private shortcuts = readRangeShortcuts("piano");
   private pedalHeld = false;
   private pedalLatched = false;
   private hasPlayed = false;
   private audioUnavailable = false;
   private snapshot: PianoSnapshot = {
-    notes: [], octave: 4, sustain: false, hasPlayed: false, audioUnavailable: false,
+    notes: [], octave: this.octave, sustain: false, hasPlayed: false, audioUnavailable: false, shortcuts: this.shortcuts,
   };
 
   subscribe = (listener: () => void): (() => void) => {
@@ -37,6 +43,7 @@ export class PianoController {
   getSnapshot = (): PianoSnapshot => this.snapshot;
 
   attach(): void {
+    window.addEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.stopAll);
@@ -44,6 +51,7 @@ export class PianoController {
   }
 
   dispose(): void {
+    window.removeEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.stopAll);
@@ -54,8 +62,9 @@ export class PianoController {
 
   press(source: string, offset: number): void {
     if (this.heldVoices.has(source) || !PIANO_KEYS.some((key) => key.offset === offset)) return;
-    const id = `piano-${++this.serial}`;
     const midi = pianoMidi(offset, this.octave);
+    if (!isPianoMidi(midi)) return;
+    const id = `piano-${++this.serial}`;
     if (!this.engine.play(id, midi)) {
       this.audioUnavailable = true;
       this.publish();
@@ -65,6 +74,7 @@ export class PianoController {
     this.hasPlayed = true;
     this.notes.set(id, { id, midi, held: true });
     this.heldVoices.set(source, id);
+    if (!source.startsWith("demo-")) publishPerformance("piano", String(midi));
     this.publish();
   }
 
@@ -91,10 +101,22 @@ export class PianoController {
   }
 
   shiftOctave(delta: number): void {
-    const next = Math.max(MIN_OCTAVE, Math.min(MAX_OCTAVE, this.octave + delta));
+    this.setOctave(this.octave + delta);
+  }
+
+  setOctave(octave: number): void {
+    if (!Number.isFinite(octave)) return;
+    const next = Math.max(MIN_OCTAVE, Math.min(MAX_OCTAVE, Math.round(octave)));
     if (next === this.octave) return;
-    this.stopAll();
     this.octave = next;
+    writePreference("piano:octave", next);
+    this.publish();
+  }
+
+  setShortcut(direction: keyof RangeShortcuts, code: RangeShortcuts["lower"]): void {
+    if (!isRangeShortcut(code) || this.shortcuts[direction === "lower" ? "higher" : "lower"] === code) return;
+    this.shortcuts = { ...this.shortcuts, [direction]: code };
+    writePreference("piano:shortcuts", this.shortcuts);
     this.publish();
   }
 
@@ -118,10 +140,12 @@ export class PianoController {
   private get sustain(): boolean { return this.pedalHeld || this.pedalLatched; }
 
   private onKeyDown = (event: KeyboardEvent): void => {
-    if (event.metaKey || event.ctrlKey || event.altKey || this.isTextTarget(event.target)) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || this.isTextTarget(event.target)) return;
     if (event.code === "Escape") { this.stopAll(); return; }
     const key = PIANO_KEYS.find((item) => item.code === event.code);
-    if (!key && !["Space", "ArrowLeft", "ArrowRight"].includes(event.code)) return;
+    const lower = event.code === this.shortcuts.lower || event.code === "ArrowLeft";
+    const higher = event.code === this.shortcuts.higher || event.code === "ArrowRight";
+    if (!key && !lower && !higher && event.code !== "Space") return;
     // Space should still activate a focused switch, piano key, or pedal button.
     if (event.code === "Space" && event.target instanceof HTMLElement && event.target.closest("button, a")) return;
     event.preventDefault();
@@ -129,8 +153,8 @@ export class PianoController {
     this.pressed.add(event.code);
     if (key) this.press(`keyboard-${event.code}`, key.offset);
     if (event.code === "Space") { this.pedalHeld = true; this.flushPedal(); }
-    if (event.code === "ArrowLeft") this.shiftOctave(-1);
-    if (event.code === "ArrowRight") this.shiftOctave(1);
+    if (lower) this.shiftOctave(-1);
+    if (higher) this.shiftOctave(1);
   };
 
   private onKeyUp = (event: KeyboardEvent): void => {
@@ -171,6 +195,7 @@ export class PianoController {
     this.snapshot = {
       notes: [...this.notes.values()], octave: this.octave, sustain: this.sustain,
       hasPlayed: this.hasPlayed, audioUnavailable: this.audioUnavailable,
+      shortcuts: this.shortcuts,
     };
     for (const listener of this.listeners) listener();
   }

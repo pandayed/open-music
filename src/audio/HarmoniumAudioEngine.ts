@@ -1,10 +1,17 @@
+import { connectAudioOutput } from "./output";
+
 // All 17 displayed pitches can be held, with room for bounded release tails.
 const VOICE_LIMIT = 24;
 const VOICE_GAIN = 0.12;
 const MASTER_GAIN = 0.58;
 const ATTACK_SECONDS = 0.035;
 const RELEASE_SECONDS = 0.1;
-const PRESSURE_SMOOTHING_SECONDS = 0.035;
+const PRESSURE_RISE_SECONDS = 0.012;
+const PRESSURE_FALL_SECONDS = 0.07;
+
+function pressureGain(pressure: number): number {
+  return Math.pow(pressure, 0.65) * MASTER_GAIN;
+}
 
 type HarmoniumVoice = {
   id: string;
@@ -23,8 +30,18 @@ export class HarmoniumAudioEngine {
   private reedWave: PeriodicWave | null = null;
   private resumeRequestedContext: AudioContext | null = null;
   private pressure = 0;
+  private disconnectOutput: (() => void) | null = null;
   private readonly voices = new Map<string, HarmoniumVoice>();
   private readonly connectedVoices = new Set<HarmoniumVoice>();
+
+  async activate(): Promise<boolean> {
+    const context = this.getContext();
+    if (!context || context.state === "closed") return false;
+    try {
+      if (context.state === "suspended") await context.resume();
+      return context.state === "running";
+    } catch { return false; }
+  }
 
   play(id: string, midi: number): boolean {
     if (!Number.isInteger(midi) || midi < 21 || midi > 108) return false;
@@ -102,13 +119,14 @@ export class HarmoniumAudioEngine {
   }
 
   setPressure(value: number): void {
+    const previous = this.pressure;
     this.pressure = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
     const context = this.context;
     if (!context || !this.master || context.state === "closed") return;
     const now = context.currentTime;
     const gain = this.master.gain;
     gain.cancelScheduledValues(now);
-    gain.setTargetAtTime(this.pressure * MASTER_GAIN, now, PRESSURE_SMOOTHING_SECONDS);
+    gain.setTargetAtTime(pressureGain(this.pressure), now, this.pressure > previous ? PRESSURE_RISE_SECONDS : PRESSURE_FALL_SECONDS);
   }
 
   stopAll(): void {
@@ -119,6 +137,8 @@ export class HarmoniumAudioEngine {
 
   dispose(): void {
     this.stopAll();
+    this.disconnectOutput?.();
+    this.disconnectOutput = null;
     this.master?.disconnect();
     this.limiter?.disconnect();
     const context = this.context;
@@ -137,7 +157,7 @@ export class HarmoniumAudioEngine {
     try {
       context = new AudioContext({ latencyHint: "interactive" });
       const master = context.createGain();
-      master.gain.value = this.pressure * MASTER_GAIN;
+      master.gain.value = pressureGain(this.pressure);
       const limiter = context.createWaveShaper();
       const curve = new Float32Array(1025);
       for (let i = 0; i < curve.length; i += 1) {
@@ -147,10 +167,11 @@ export class HarmoniumAudioEngine {
           : Math.sign(value) * (0.55 + 0.27 * Math.tanh((magnitude - 0.55) / 0.27));
       }
       limiter.curve = curve;
-      master.connect(limiter).connect(context.destination);
+      master.connect(limiter);
       const real = new Float32Array(13);
       const imag = new Float32Array([0, 1, 0.52, 0.34, 0.18, 0.14, 0.1, 0.085, 0.06, 0.035, 0.025, 0.018, 0.012]);
       const reedWave = context.createPeriodicWave(real, imag);
+      this.disconnectOutput = connectAudioOutput(context, limiter);
       this.context = context;
       this.master = master;
       this.limiter = limiter;

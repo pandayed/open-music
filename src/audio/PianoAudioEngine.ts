@@ -1,3 +1,4 @@
+import { connectAudioOutput } from "./output";
 const SAMPLE_SECONDS = 6;
 const CACHE_LIMIT = 16;
 const VOICE_LIMIT = 32;
@@ -17,6 +18,7 @@ type PianoVoice = {
  */
 export class PianoAudioEngine {
   private context: AudioContext | null = null;
+  private disconnectOutput: (() => void) | null = null;
   private master: GainNode | null = null;
   private limiter: WaveShaperNode | null = null;
   private readonly voices = new Map<string, PianoVoice>();
@@ -25,6 +27,16 @@ export class PianoAudioEngine {
   private disposed = false;
 
   constructor(private readonly onVoiceEnd?: (id: string) => void) {}
+
+  async activate(): Promise<boolean> {
+    if (this.disposed) return false;
+    const context = this.getContext();
+    if (!context || context.state === "closed") return false;
+    try {
+      if (context.state === "suspended") await context.resume();
+      return context.state === "running";
+    } catch { return false; }
+  }
 
   play(id: string, midi: number): boolean {
     if (this.disposed || !Number.isInteger(midi) || midi < 21 || midi > 108) return false;
@@ -107,6 +119,8 @@ export class PianoAudioEngine {
     this.disposed = true;
     this.stopAll();
     this.sampleCache.clear();
+    this.disconnectOutput?.();
+    this.disconnectOutput = null;
     this.master?.disconnect();
     this.limiter?.disconnect();
     if (this.context && this.context.state !== "closed") {
@@ -119,8 +133,9 @@ export class PianoAudioEngine {
 
   private getContext(): AudioContext | null {
     if (this.context) return this.context;
+    let context: AudioContext | null = null;
     try {
-      const context = new AudioContext({ latencyHint: "interactive" });
+      context = new AudioContext({ latencyHint: "interactive" });
       const master = context.createGain();
       master.gain.value = 0.22;
       // Ordinary notes pass through unchanged; dense sustained overlaps are
@@ -134,12 +149,18 @@ export class PianoAudioEngine {
           : Math.sign(value) * (0.6 + 0.3 * Math.tanh((magnitude - 0.6) / 0.3));
       }
       limiter.curve = curve;
-      master.connect(limiter).connect(context.destination);
+      master.connect(limiter);
+      this.disconnectOutput = connectAudioOutput(context, limiter);
       this.context = context;
       this.master = master;
       this.limiter = limiter;
       return context;
     } catch {
+      this.disconnectOutput?.();
+      this.disconnectOutput = null;
+      if (context) void context.close().catch(() => {});
+      this.context = null;
+      this.master = null;
       return null;
     }
   }

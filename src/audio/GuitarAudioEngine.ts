@@ -1,3 +1,4 @@
+import { connectAudioOutput } from "./output";
 /** Low E through high E, in standard guitar tuning. */
 const OPEN_STRING_MIDI = [40, 45, 50, 55, 59, 64] as const;
 
@@ -28,6 +29,7 @@ type Voice = {
  */
 export class GuitarAudioEngine {
   private context: AudioContext | null = null;
+  private disconnectOutput: (() => void) | null = null;
   private master: GainNode | null = null;
   private vibratoOscillator: OscillatorNode | null = null;
   private readonly voices = new Map<string, Voice>();
@@ -38,6 +40,16 @@ export class GuitarAudioEngine {
   private disposed = false;
 
   constructor(private readonly onVoiceEnd?: (id: string) => void) {}
+
+  async activate(): Promise<boolean> {
+    if (this.disposed) return false;
+    const context = this.getContext();
+    if (!context || context.state === "closed") return false;
+    try {
+      if (context.state === "suspended") await context.resume();
+      return context.state === "running";
+    } catch { return false; }
+  }
 
   play(id: string, stringIndex: number, fret: number, delaySeconds = 0): void {
     if (
@@ -171,6 +183,8 @@ export class GuitarAudioEngine {
     this.sampleCache.clear();
     try { this.vibratoOscillator?.stop(); } catch { /* already stopped */ }
     this.vibratoOscillator?.disconnect();
+    this.disconnectOutput?.();
+    this.disconnectOutput = null;
     this.master?.disconnect();
     if (this.context && this.context.state !== "closed") {
       void this.context.close().catch(() => {});
@@ -182,11 +196,12 @@ export class GuitarAudioEngine {
 
   private getContext(): AudioContext | null {
     if (this.context) return this.context;
+    let context: AudioContext | null = null;
     try {
-      const context = new AudioContext({ latencyHint: "interactive" });
+      context = new AudioContext({ latencyHint: "interactive" });
       const master = context.createGain();
       master.gain.value = 0.46;
-      master.connect(context.destination);
+      this.disconnectOutput = connectAudioOutput(context, master);
 
       const vibratoOscillator = context.createOscillator();
       vibratoOscillator.type = "sine";
@@ -198,6 +213,11 @@ export class GuitarAudioEngine {
       this.vibratoOscillator = vibratoOscillator;
       return context;
     } catch {
+      this.disconnectOutput?.();
+      this.disconnectOutput = null;
+      if (context) void context.close().catch(() => {});
+      this.context = null;
+      this.master = null;
       return null;
     }
   }

@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { CSSProperties, PointerEvent } from "react";
-import { InstrumentSwitcher } from "../InstrumentSwitcher";
-import type { Instrument } from "../InstrumentSwitcher";
-import { SongLessons } from "../SongLessons";
 import { PianoController } from "./PianoController";
-import { MAX_OCTAVE, MIN_OCTAVE, PIANO_KEYS, pianoMidi, pianoNoteName } from "./model";
+import { RangeNavigator } from "../RangeNavigator";
+import { MAX_OCTAVE, MIN_OCTAVE, MIN_PIANO_MIDI, MAX_PIANO_MIDI, PIANO_KEYS, pianoMidi, pianoNoteName, isPianoMidi } from "./model";
+import { RANGE_SHORTCUTS } from "../preferences";
 
 function PianoMark() {
   return (
@@ -16,7 +15,7 @@ function PianoMark() {
   );
 }
 
-export default function Piano({ onSelectInstrument }: { onSelectInstrument: (instrument: Instrument) => void }) {
+export default function Piano() {
   const controller = useMemo(() => new PianoController(), []);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
 
@@ -27,11 +26,15 @@ export default function Piano({ onSelectInstrument }: { onSelectInstrument: (ins
 
   const heldMidi = new Set(state.notes.filter((note) => note.held).map((note) => note.midi));
   const soundingMidi = new Set(state.notes.map((note) => note.midi));
-  const range = `${pianoNoteName(pianoMidi(0, state.octave))} – ${pianoNoteName(pianoMidi(16, state.octave))}`;
+  const firstMidi = Math.max(MIN_PIANO_MIDI, pianoMidi(0, state.octave));
+  const range = `${pianoNoteName(firstMidi)} – ${pianoNoteName(Math.min(MAX_PIANO_MIDI, pianoMidi(16, state.octave)))}`;
+  const shortcutLabel = (code: string) => RANGE_SHORTCUTS.find((shortcut) => shortcut.code === code)?.label ?? code;
   const soundingNames = [...soundingMidi].sort((a, b) => a - b).map(pianoNoteName);
 
   function pressKey(event: PointerEvent<HTMLButtonElement>, offset: number) {
     if (event.button !== 0) return;
+    // Resume physical-key playing after adjusting a shortcut select.
+    if (document.activeElement instanceof HTMLElement && document.activeElement.matches("input, textarea, select")) document.activeElement.blur();
     // Pointer playing does not move focus away from keyboard pedal controls.
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -51,19 +54,17 @@ export default function Piano({ onSelectInstrument }: { onSelectInstrument: (ins
       </div>
 
       <div className="desktop-experience">
-        <header className="site-header">
-          <div className="brand"><span className="brand-mark"><PianoMark /></span><span>NERDBOARD<span className="brand-period">.</span></span></div>
-          <InstrumentSwitcher selected="piano" onSelect={onSelectInstrument} />
+        <div className="instrument-audio-state">
           <div className={`audio-status${state.hasPlayed && !state.audioUnavailable ? " is-live" : ""}`} role="status">
             <span className="status-dot" />{state.audioUnavailable ? "AUDIO UNAVAILABLE" : state.hasPlayed ? "AUDIO LIVE" : "PRESS A KEY TO BEGIN"}
           </div>
-        </header>
+        </div>
 
         <main>
           <section className="instrument-section" aria-label="Virtual piano">
             <div className="section-heading">
               <div className="section-heading-title"><span className="section-index">01</span><h2>THE INSTRUMENT</h2></div>
-              <span className="tuning-label">17 KEYS <span>{range} · A4 = 440 Hz</span></span>
+              <span className="tuning-label">88-NOTE RANGE <span>{range} · A4 = 440 Hz</span></span>
             </div>
 
             <div className="piano-instrument">
@@ -77,14 +78,16 @@ export default function Piano({ onSelectInstrument }: { onSelectInstrument: (ins
                   const name = pianoNoteName(midi);
                   const held = heldMidi.has(midi);
                   const sounding = soundingMidi.has(midi);
+                  const playable = isPianoMidi(midi);
                   return (
                     <button
                       key={key.code}
                       type="button"
                       className={`piano-key ${key.black ? "piano-black-key" : "piano-white-key"}${held ? " is-held" : ""}${sounding && !held ? " is-sustained" : ""}`}
                       style={{ "--key-index": key.whiteIndex } as CSSProperties}
-                      aria-label={`${name}, keyboard ${key.key}`}
+                      aria-label={playable ? `${name}, keyboard ${key.key}` : `${name}, outside the piano range`}
                       aria-pressed={held}
+                      disabled={!playable}
                       onPointerDown={(event) => pressKey(event, key.offset)}
                       onPointerUp={releaseKey}
                       onPointerCancel={releaseKey}
@@ -92,13 +95,13 @@ export default function Piano({ onSelectInstrument }: { onSelectInstrument: (ins
                       onClick={(event) => { if (event.detail === 0) controller.tap(key.offset); }}
                     >
                       <span className="piano-note-label">{name}</span>
-                      <span className="piano-key-label">{key.key}</span>
+                      <span className="piano-key-label keyboard-hint">{key.key}</span>
                     </button>
                   );
                 })}
               </div>
               <div className="piano-bottomline">
-                <span className="piano-note-readout">{soundingNames.length ? soundingNames.join(" · ") : `C${state.octave} IS A / START ANYWHERE`}</span>
+                <span className="piano-note-readout">{soundingNames.length ? soundingNames.join(" · ") : `${pianoNoteName(firstMidi)} / START ANYWHERE`}</span>
                 <div className="neck-readout">
                   <span className={state.sustain ? "effect-live" : ""}>SUSTAIN {state.sustain ? "ON" : "OFF"}</span>
                   <span className="play-indicator">{soundingMidi.size ? `${soundingMidi.size} ${soundingMidi.size === 1 ? "NOTE" : "NOTES"} RINGING` : "READY TO PLAY"}</span>
@@ -106,19 +109,14 @@ export default function Piano({ onSelectInstrument }: { onSelectInstrument: (ins
               </div>
             </div>
 
+            <RangeNavigator octave={state.octave} min={MIN_OCTAVE} max={MAX_OCTAVE} range={range} fullRange="A0–C8"
+              bankLabel={(bank) => bank === MIN_OCTAVE ? "A0" : `C${bank}`} shortcuts={state.shortcuts}
+              onOctave={(octave) => controller.setOctave(octave)} onShortcut={(direction, code) => controller.setShortcut(direction, code)} />
             <div className="piano-toolbar">
-              <div className="piano-octave-control">
-                <span className="piano-toolbar-label">OCTAVE</span>
-                <button type="button" className="piano-action" aria-label="Lower octave" disabled={state.octave === MIN_OCTAVE} onClick={() => controller.shiftOctave(-1)}>←</button>
-                <span className="piano-octave-value" aria-live="polite">C{state.octave}</span>
-                <button type="button" className="piano-action" aria-label="Higher octave" disabled={state.octave === MAX_OCTAVE} onClick={() => controller.shiftOctave(1)}>→</button>
-                <span className="piano-toolbar-hint">ARROW KEYS / C2 TO C6</span>
-              </div>
               <div className="piano-pedal-control">
                 <button type="button" className="piano-action piano-pedal" aria-pressed={state.sustain} onClick={() => controller.toggleSustain()}>
                   <span className="pedal-dot" /> SUSTAIN {state.sustain ? "ON" : "OFF"}
                 </button>
-                <button type="button" className="piano-action piano-stop" onClick={controller.stopAll}>STOP ALL <span>ESC</span></button>
               </div>
             </div>
           </section>
@@ -138,16 +136,12 @@ export default function Piano({ onSelectInstrument }: { onSelectInstrument: (ins
                 <div className="piano-control-example"><span className={`keycap is-wide${state.sustain ? " is-active" : ""}`}>SPACE</span><span>RELEASE THE PEDAL TO DAMP THE NOTES</span></div>
               </div>
               <div className="control-group">
-                <div className="control-title"><span className="control-number">03</span><div><h3>Explore the range</h3><p>Use ← / → to move the keyboard by an octave.<br />Changing octave stops the current notes.</p></div></div>
-                <div className="piano-control-example"><span className="keycap">←</span><span className="keycap">→</span><span>LOWER / HIGHER</span></div>
+                <div className="control-title"><span className="control-number">03</span><div><h3>Explore the range</h3><p>Tap {shortcutLabel(state.shortcuts.lower)} / {shortcutLabel(state.shortcuts.higher)} to move by an octave.<br />Held notes and sustain continue while you change range.</p></div></div>
+                <div className="piano-control-example"><span className="keycap is-wide">{shortcutLabel(state.shortcuts.lower)}</span><span className="keycap is-wide">{shortcutLabel(state.shortcuts.higher)}</span><span>LOWER / HIGHER</span></div>
               </div>
             </div>
           </section>
-
-          <SongLessons instrument="piano" />
         </main>
-
-        <footer><span>NERDBOARD / EXPERIMENT 002</span><span>A LITTLE MELODY GOES A LONG WAY.</span></footer>
       </div>
     </div>
   );

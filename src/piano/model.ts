@@ -19,8 +19,15 @@ export const PIANO_KEYS = [
   { code: "Semicolon", key: ";", offset: 16, whiteIndex: 9, black: false },
 ] as const;
 
-export const MIN_OCTAVE = 2;
-export const MAX_OCTAVE = 6;
+// The first bank starts at C0; only its A0–E1 keys are playable.
+export const MIN_OCTAVE = 0;
+export const MAX_OCTAVE = 7;
+export const MIN_PIANO_MIDI = 21;
+export const MAX_PIANO_MIDI = 108;
+
+export function isPianoMidi(midi: number): boolean {
+  return Number.isInteger(midi) && midi >= MIN_PIANO_MIDI && midi <= MAX_PIANO_MIDI;
+}
 
 const NOTE_NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 

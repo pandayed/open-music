@@ -1,3 +1,4 @@
+import { connectAudioOutput } from "./output";
 import type { SynthSettings } from "../synth/model";
 
 type SynthVoice = {
@@ -14,6 +15,7 @@ const VOICE_LIMIT = 8;
 /** An original mono pluck approximation, not the recording's NN-19 sample. */
 export class SynthAudioEngine {
   private context: AudioContext | null = null;
+  private disconnectOutput: (() => void) | null = null;
   private master: GainNode | null = null;
   private limiter: WaveShaperNode | null = null;
   private current: SynthVoice | null = null;
@@ -22,6 +24,16 @@ export class SynthAudioEngine {
   private disposed = false;
 
   constructor(private readonly onVoiceEnd: (id: string) => void) {}
+
+  async activate(): Promise<boolean> {
+    if (this.disposed) return false;
+    const context = this.getContext();
+    if (!context || context.state === "closed") return false;
+    try {
+      if (context.state === "suspended") await context.resume();
+      return context.state === "running";
+    } catch { return false; }
+  }
 
   play(id: string, midi: number, settings: SynthSettings): boolean {
     if (this.disposed || !Number.isInteger(midi) || midi < 36 || midi > 100) return false;
@@ -119,6 +131,8 @@ export class SynthAudioEngine {
     this.disposed = true;
     this.stopAll();
     this.pulseWaves.clear();
+    this.disconnectOutput?.();
+    this.disconnectOutput = null;
     this.master?.disconnect();
     this.limiter?.disconnect();
     if (this.context && this.context.state !== "closed") void this.context.close().catch(() => {});
@@ -138,7 +152,8 @@ export class SynthAudioEngine {
       const curve = new Float32Array(1025);
       for (let i = 0; i < curve.length; i += 1) curve[i] = Math.tanh(i * 2 / (curve.length - 1) - 1);
       limiter.curve = curve;
-      master.connect(limiter).connect(context.destination);
+      master.connect(limiter);
+      this.disconnectOutput = connectAudioOutput(context, limiter);
       this.context = context;
       this.master = master;
       this.limiter = limiter;

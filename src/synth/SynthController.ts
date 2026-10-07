@@ -1,6 +1,10 @@
+import { STOP_SOUND_EVENT } from "../studioEvents";
 import { SynthAudioEngine } from "../audio/SynthAudioEngine";
 import { MAX_SYNTH_OCTAVE, MIN_SYNTH_OCTAVE, PLUCK_PRESET, SYNTH_KEYS, synthMidi } from "./model";
 import type { SynthSettings } from "./model";
+import { isRangeShortcut, readOctave, readRangeShortcuts, writePreference } from "../preferences";
+import type { RangeShortcuts } from "../preferences";
+import { publishPerformance } from "../practice/events";
 
 type SynthNote = { id: string; midi: number };
 export type SynthSnapshot = {
@@ -9,6 +13,7 @@ export type SynthSnapshot = {
   settings: SynthSettings;
   hasPlayed: boolean;
   audioUnavailable: boolean;
+  shortcuts: RangeShortcuts;
 };
 
 export class SynthController {
@@ -21,12 +26,13 @@ export class SynthController {
   private readonly taps = new Set<ReturnType<typeof setTimeout>>();
   private serial = 0;
   private note: SynthNote | null = null;
-  private octave = 3;
+  private octave = readOctave("synth", 3, MIN_SYNTH_OCTAVE, MAX_SYNTH_OCTAVE);
+  private shortcuts = readRangeShortcuts("synth");
   private settings = { ...PLUCK_PRESET };
   private hasPlayed = false;
   private audioUnavailable = false;
   private snapshot: SynthSnapshot = {
-    note: null, octave: 3, settings: { ...PLUCK_PRESET }, hasPlayed: false, audioUnavailable: false,
+    note: null, octave: this.octave, settings: { ...PLUCK_PRESET }, hasPlayed: false, audioUnavailable: false, shortcuts: this.shortcuts,
   };
 
   subscribe = (listener: () => void): (() => void) => {
@@ -36,6 +42,7 @@ export class SynthController {
   getSnapshot = (): SynthSnapshot => this.snapshot;
 
   attach(): void {
+    window.addEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.stopAll);
@@ -43,6 +50,7 @@ export class SynthController {
   }
 
   dispose(): void {
+    window.removeEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.stopAll);
@@ -64,6 +72,7 @@ export class SynthController {
     this.note = { id, midi };
     this.hasPlayed = true;
     this.audioUnavailable = false;
+    if (!source.startsWith("demo-")) publishPerformance("synth", String(midi));
     this.publish();
   }
 
@@ -82,10 +91,22 @@ export class SynthController {
   }
 
   shiftOctave(delta: number): void {
-    const next = Math.max(MIN_SYNTH_OCTAVE, Math.min(MAX_SYNTH_OCTAVE, this.octave + delta));
+    this.setOctave(this.octave + delta);
+  }
+
+  setOctave(octave: number): void {
+    if (!Number.isFinite(octave)) return;
+    const next = Math.max(MIN_SYNTH_OCTAVE, Math.min(MAX_SYNTH_OCTAVE, Math.round(octave)));
     if (next === this.octave) return;
-    this.stopAll();
     this.octave = next;
+    writePreference("synth:octave", next);
+    this.publish();
+  }
+
+  setShortcut(direction: keyof RangeShortcuts, code: RangeShortcuts["lower"]): void {
+    if (!isRangeShortcut(code) || this.shortcuts[direction === "lower" ? "higher" : "lower"] === code) return;
+    this.shortcuts = { ...this.shortcuts, [direction]: code };
+    writePreference("synth:shortcuts", this.shortcuts);
     this.publish();
   }
 
@@ -100,6 +121,7 @@ export class SynthController {
     this.stopAll();
     this.settings = { ...PLUCK_PRESET };
     this.octave = 3;
+    writePreference("synth:octave", this.octave);
     this.publish();
   }
 
@@ -115,17 +137,19 @@ export class SynthController {
 
   private onKeyDown = (event: KeyboardEvent): void => {
     const target = event.target;
-    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
     if (event.code === "Escape") { event.preventDefault(); this.stopAll(); return; }
     if (target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
     const key = SYNTH_KEYS.find((item) => item.code === event.code);
-    if (!key && !["ArrowLeft", "ArrowRight"].includes(event.code)) return;
+    const lower = event.code === this.shortcuts.lower || event.code === "ArrowLeft";
+    const higher = event.code === this.shortcuts.higher || event.code === "ArrowRight";
+    if (!key && !lower && !higher) return;
     event.preventDefault();
     if (event.repeat || this.pressed.has(event.code)) return;
     this.pressed.add(event.code);
     if (key) this.press(`keyboard-${event.code}`, key.offset);
-    if (event.code === "ArrowLeft") this.shiftOctave(-1);
-    if (event.code === "ArrowRight") this.shiftOctave(1);
+    if (lower) this.shiftOctave(-1);
+    if (higher) this.shiftOctave(1);
   };
 
   private onKeyUp = (event: KeyboardEvent): void => {
@@ -138,6 +162,7 @@ export class SynthController {
     this.snapshot = {
       note: this.note, octave: this.octave, settings: this.settings,
       hasPlayed: this.hasPlayed, audioUnavailable: this.audioUnavailable,
+      shortcuts: this.shortcuts,
     };
     for (const listener of this.listeners) listener();
   }

@@ -1,13 +1,23 @@
 # Nerdboard
 
-Desktop virtual guitar, piano, drums, synthesizer, harmonium, and tabla played with a physical keyboard. Built with React, TypeScript, Vite, CSS, and the Web Audio API. Choose an instrument in the header; switching stops the previous instrument and its keyboard listeners.
+Desktop virtual guitar, piano, drums, synthesizer, harmonium, and tabla played with a physical keyboard. Built with React, TypeScript, Vite, CSS, and the Web Audio API. Choose an instrument and use Play, Practice, or Learn. Switching instruments stops the previous instrument and its keyboard listeners; changing studio activity keeps your instrument available.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite. Audio starts after the first playing gesture. All instruments generate their sound locally; no audio downloads are needed.
+Open the local URL printed by Vite on a laptop or desktop with a physical keyboard and a browser window at least 980 pixels wide. Narrower windows show the keyboard requirement instead of a mobile instrument layout. Audio starts after the first playing gesture. All instruments generate their sound locally; no audio downloads are needed.
+
+## Practice studio
+
+- **Play** keeps the instrument and a compact control guide together. Keyboard hints can be hidden without removing notes or chords.
+- **Practice** offers exercises for all six instruments: select a phrase and tempo, listen to its reference, use a four-beat count-in, repeat or retry, and inspect real input-timing feedback.
+- **Learn** contains instrument controls, listening guidance, and the existing song sequences, plus harmonium airflow and tabla coordination exercises.
+- Practice feedback checks key/pad onsets. It does not assess recorded audio, sustained-note duration, physical technique, or bellows quality. Choose the range named in each phrase before practising.
+- Instrument choice, activity, keyboard range/shortcuts, volume, bellows settings, hints, and practice progress are stored locally when browser storage is available. Playing continues when storage is blocked.
+- **Record a take** captures synthesized instrument output and reference/metronome audio, with no microphone permission. Start recording before or after the first note, stop, listen back, or download. Each take is limited to three minutes and 12 MiB. Download a take before changing instruments; takes are kept only in session memory.
+- **Stop sound / Escape** stops the active instrument and practice transport. Tab hiding pauses practice, stops recording, and pauses take playback.
 
 ## Guitar
 
@@ -24,7 +34,7 @@ Keyboard auto-repeat is ignored. Releasing a pluck/strum key releases its notes;
 
 - White keys: `A S D F G H J K L ;` → C D E F G A B C D E.
 - Black keys: `W E T Y U O P` → C♯ D♯ F♯ G♯ A♯ C♯ D♯.
-- Starts at C4–E5. `←` / `→` or the octave buttons move the starting octave from C2 through C6, reaching E7. Changing octave stops current notes and resets sustain.
+- Starts at C4–E5 on first use, then remembers the selected range. Tap **Left Shift** for a lower octave or **Right Shift** for a higher octave. Clickable range banks cover the full A0–C8 piano; keys outside that range are disabled at the ends. Change shortcuts in the range panel. Arrow keys remain available. Range changes preserve sounding pitches and sustain; new notes use the selected range.
 - Play several keys together for chords. Try `A D G` for C major.
 - Hold `Space` to sustain notes after releasing their keys. Release Space to damp them. Click **Sustain** to latch the pedal; click again to release it. A latched pedal stays on when Space is released.
 - Press and hold a piano key with the mouse, or focus it with Tab and use Enter/Space for a short note. Space activates a focused button instead of the pedal.
@@ -61,7 +71,7 @@ To verify manually, select **Tabla**, try all eight keys and mouse pads, play `A
 ## Synthesizer
 
 - Opens with an **Alors-style pluck** preset: an original synthesized approximation of the opening sound in Stromae's *Alors on danse*.
-- Uses the piano's white/black key mapping and mouse controls. Starts at C3–E4; `←` / `→` move the starting octave from C2 to C6.
+- Uses the piano's white/black key mapping and mouse controls. Starts at C3–E4 on first use, then remembers the range. Left/Right Shift or the range banks move from C2 to C6. Shortcuts can be changed; arrows still work. Changing range lets the current note finish normally.
 - Mono playing: each new note takes over; held keys naturally decay. Release and press a key again to retrigger it. Enter/Space activates a focused key as a short note.
 - **Brightness**, **Decay**, and **Echo** affect the next note. Echo adds one repeat at a fixed eighth-note delay of about 246 ms (122 BPM).
 - **Reset preset** restores the starting tone and C3 octave. `Escape`, **Stop all**, blur, tab hiding, and instrument switching clear notes and echoes.
@@ -70,18 +80,18 @@ The original opening bass sound was played through Reason's NN-19 sampler, as sh
 
 ## Harmonium
 
-- Uses the piano's white/black key mapping. Starts at C3–E4; `←` / `→` move the starting octave from C2 through C6. Hold several notes together for chords. Changing octave releases notes.
+- Uses the piano's white/black key mapping. Starts at C3–E4 on first use, then remembers the range. Left/Right Shift or the range banks move from C2 through C6. Hold several notes together for chords. Range changes keep held pitches intact.
 - **Manual pump** is the starting mode. Hold `Space` while holding note keys, or hold the **Hold to pump** button, to build air pressure. When you stop pumping, air fades out. Without air, held notes are silent.
 - **Steady air** maintains a 65% supply so you can play with both hands without pumping.
-- **Hinge bellows** starts disabled until you connect. No external sensor, cable, native installation, or macOS switch is needed. **Connect lid sensor** opens the browser's device chooser. On a compatible MacBook, select **las** if listed, or the Apple lid-angle sensor, then click the popup's **Connect / Pair** button. A successful connection normally selects **Hinge bellows**; move the lid gently while holding notes to supply air. You can switch back to manual or steady air while keeping the sensor connected for diagnostics.
-- The sensor panel displays actual angle readings, the last interval, recent update rate, and reading age. The pressure model uses actual reported angle changes; it does not invent higher-frequency sensor samples. A low update rate may make hinge playing delayed or miss movements between samples.
+- **Hinge bellows** starts disabled until you connect. No external sensor, cable, native installation, or macOS switch is needed. **Connect lid sensor** opens the browser's device chooser. On a compatible MacBook, select **las** if listed, or the Apple lid-angle sensor, then click the popup's **Connect / Pair** button. Open **Set up hinge** for browser checks, connection, movement verification, and optional 8-second sensitivity calibration. The browser still owns its device chooser. After connecting, select **Hinge bellows**; move the lid gently while holding notes to supply air. You can switch back to manual or steady air while keeping the sensor connected for diagnostics.
+- The setup dialog has expandable diagnostics with actual angle readings, last interval, recent update rate, and reading age. Bellows sensitivity defaults to 3×, can be calibrated using real movement, and can be adjusted from 0.5× to 6×. Smooth air retention fades more slowly than Natural; instrument volume is separate. The pressure model uses actual reported angle changes; it does not invent higher-frequency sensor samples. A low update rate may make hinge playing delayed or miss movements between samples.
 - The browser path requires WebHID (for example, desktop Chrome/Edge), a compatible Apple lid-angle sensor, and HTTPS or localhost. Safari/Firefox and hardware without that sensor can still use manual or steady air. Hardware compatibility and responsiveness must be checked on your own machine.
 - Focused buttons retain keyboard activation. Hold Enter/Space on the pump button to pump; Enter/Space on a note button plays a short note. Space on other focused buttons activates them instead of pumping.
-- `Escape`, **Stop all**, window blur, and tab hiding stop notes, empty the air reservoir, and return to Manual pump. They keep an existing sensor connection available; **Disconnect** or instrument switching closes it. Selecting Hinge bellows again starts a fresh movement baseline.
+- `Escape`, **Stop sound**, window blur, and tab hiding stop notes, empty the air reservoir, and return to Manual pump. They keep an existing sensor connection available; **Disconnect** or instrument switching closes it. Selecting Hinge bellows again starts a fresh movement baseline.
 
 The harmonium generates an original sustained reed approximation locally, with two subtly detuned harmonic reeds per note, a smooth pressure-controlled gain, and a bounded voice count. It includes no downloaded harmonium recordings or native helper. Inspired by [Hingemonium](https://github.com/Rocktopus101/Hingemonium); the direct browser input-report approach is also demonstrated in [LidPerspective](https://github.com/TANG617/LidPerspective) and [iPhone Solo](https://github.com/soloiaros/iphone-solo). Our sensor adapter only opens the selected sensor and listens to input reports; it does not write feature/output reports or change system settings. Browser permission is requested only when you click Connect.
 
-The **Built-in lid sensor** panel includes visible check/connect/disable steps, troubleshooting, saved-permission removal, and an optional read-only macOS hardware check. A changing angle verifies actual readings; an enabled Connect button only verifies browser support and the page's secure context. An empty chooser does not prove the hardware is absent.
+The **Set up hinge** dialog includes browser checks, connect/disconnect actions, movement verification, calibration, fallback modes, troubleshooting, saved-permission removal, and an optional read-only macOS hardware check. A changing angle verifies actual readings; an enabled Connect button only verifies browser support and the page's secure context. An empty chooser does not prove the hardware is absent.
 
 **Disconnect** closes the active connection but keeps the browser grant. To remove the grant in Chrome, click the site information icon left of the address, find the HID device / las entry, and click Remove. Reload this page before granting access again. If requests are blocked, check Chrome **Settings → Privacy and security → Site settings → Additional permissions → HID devices**; managed restrictions require the administrator. See [Chrome's device permission guide](https://support.google.com/chrome/answer/12576972?hl=en). The app does not change these browser settings.
 

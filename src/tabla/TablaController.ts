@@ -1,6 +1,8 @@
+import { STOP_SOUND_EVENT } from "../studioEvents";
 import { TablaAudioEngine } from "../audio/TablaAudioEngine";
 import { TABLA_PADS } from "./model";
 import type { TablaBol } from "./model";
+import { publishPerformance } from "../practice/events";
 
 export type TablaSnapshot = {
   activePads: TablaBol[];
@@ -34,6 +36,7 @@ export class TablaController {
   getSnapshot = (): TablaSnapshot => this.snapshot;
 
   attach(): void {
+    window.addEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.stopAll);
@@ -41,6 +44,7 @@ export class TablaController {
   }
 
   dispose(): void {
+    window.removeEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.stopAll);
@@ -59,6 +63,7 @@ export class TablaController {
     }
 
     this.voices.set(id, bol);
+    publishPerformance("tabla", bol);
     this.audioUnavailable = false;
     this.hasPlayed = true;
     this.lastHit = bol;

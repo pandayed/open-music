@@ -1,7 +1,4 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
-import { InstrumentSwitcher } from "../InstrumentSwitcher";
-import type { Instrument } from "../InstrumentSwitcher";
-import { SongLessons } from "../SongLessons";
 import { DrumController } from "./DrumController";
 import { DRUM_PADS } from "./model";
 
@@ -14,7 +11,7 @@ function DrumMark() {
   );
 }
 
-export default function Drums({ onSelectInstrument }: { onSelectInstrument: (instrument: Instrument) => void }) {
+export default function Drums() {
   const controller = useMemo(() => new DrumController(), []);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
 
@@ -34,13 +31,11 @@ export default function Drums({ onSelectInstrument }: { onSelectInstrument: (ins
       </div>
 
       <div className="desktop-experience">
-        <header className="site-header">
-          <div className="brand"><span className="brand-mark"><DrumMark /></span><span>NERDBOARD<span className="brand-period">.</span></span></div>
-          <InstrumentSwitcher selected="drums" onSelect={onSelectInstrument} />
+        <div className="instrument-audio-state">
           <div className={`audio-status${state.hasPlayed && !state.audioUnavailable ? " is-live" : ""}`} role="status">
             <span className="status-dot" />{state.audioUnavailable ? "AUDIO UNAVAILABLE" : state.hasPlayed ? "AUDIO LIVE" : "PRESS A KEY TO BEGIN"}
           </div>
-        </header>
+        </div>
 
         <main>
           <section className="instrument-section" aria-label="Virtual drum kit">
@@ -84,7 +79,6 @@ export default function Drums({ onSelectInstrument }: { onSelectInstrument: (ins
 
             <div className="drum-toolbar">
               <span className="drum-toolbar-hint">TAP TO STRIKE / EACH HIT RINGS OUT</span>
-              <button type="button" className="drum-stop" onClick={controller.stopAll}>STOP ALL <span>ESC</span></button>
             </div>
           </section>
 
@@ -108,11 +102,7 @@ export default function Drums({ onSelectInstrument }: { onSelectInstrument: (ins
               </div>
             </div>
           </section>
-
-          <SongLessons instrument="drums" />
         </main>
-
-        <footer><span>NERDBOARD / EXPERIMENT 003</span><span>A LITTLE RHYTHM GOES A LONG WAY.</span></footer>
       </div>
     </div>
   );

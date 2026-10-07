@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
-import { InstrumentSwitcher, type Instrument } from "../InstrumentSwitcher";
 import { TablaController } from "./TablaController";
 import { TABLA_PADS, TABLA_PRACTICE } from "./model";
 
@@ -15,7 +14,7 @@ function TablaMark() {
   );
 }
 
-export default function Tabla({ onSelectInstrument }: { onSelectInstrument: (instrument: Instrument) => void }) {
+export default function Tabla() {
   const controller = useMemo(() => new TablaController(), []);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
 
@@ -34,13 +33,11 @@ export default function Tabla({ onSelectInstrument }: { onSelectInstrument: (ins
         <p>This instrument is designed to be played on a larger screen with a physical keyboard.</p>
       </div>
       <div className="desktop-experience">
-        <header className="site-header">
-          <div className="brand"><span className="brand-mark"><TablaMark /></span><span>NERDBOARD<span className="brand-period">.</span></span></div>
-          <InstrumentSwitcher selected="tabla" onSelect={onSelectInstrument} />
+        <div className="instrument-audio-state">
           <div className={`audio-status${state.hasPlayed && !state.audioUnavailable ? " is-live" : ""}`} role="status">
             <span className="status-dot" />{state.audioUnavailable ? "AUDIO UNAVAILABLE" : state.hasPlayed ? "AUDIO LIVE" : "PRESS A KEY TO BEGIN"}
           </div>
-        </header>
+        </div>
         <main>
           <section className="instrument-section" aria-label="Virtual tabla">
             <div className="section-heading">
@@ -79,7 +76,6 @@ export default function Tabla({ onSelectInstrument }: { onSelectInstrument: (ins
             </div>
             <div className="drum-toolbar">
               <span className="drum-toolbar-hint">SYNTHESIZED TABLA / TAP AND RELEASE TO STRIKE AGAIN</span>
-              <button type="button" className="drum-stop" onClick={controller.stopAll}>STOP ALL <span>ESC</span></button>
             </div>
           </section>
           <section className="play-section" aria-label="Tabla controls">
@@ -124,7 +120,6 @@ export default function Tabla({ onSelectInstrument }: { onSelectInstrument: (ins
             </div>
           </section>
         </main>
-        <footer><span>NERDBOARD / EXPERIMENT 006</span><span>TABLA / SYNTHESIZED PERCUSSION</span></footer>
       </div>
     </div>
   );

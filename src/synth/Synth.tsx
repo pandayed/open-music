@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { CSSProperties, PointerEvent } from "react";
-import { InstrumentSwitcher } from "../InstrumentSwitcher";
-import type { Instrument } from "../InstrumentSwitcher";
-import { SongLessons } from "../SongLessons";
 import { SynthController } from "./SynthController";
 import { MAX_SYNTH_OCTAVE, MIN_SYNTH_OCTAVE, SYNTH_KEYS, synthMidi, synthNoteName } from "./model";
 import type { SynthSettings } from "./model";
+import { RangeNavigator } from "../RangeNavigator";
+import { RANGE_SHORTCUTS } from "../preferences";
 
 function SynthMark() {
   return <svg viewBox="0 0 36 36" fill="none" aria-hidden="true">
@@ -22,14 +21,16 @@ const TONE_CONTROLS: { key: keyof SynthSettings; label: string; max: number; min
   { key: "echo", label: "ECHO", min: 0, max: 35, step: 1, unit: "%", hint: "ONE LIGHT REPEAT" },
 ];
 
-export default function Synth({ onSelectInstrument }: { onSelectInstrument: (instrument: Instrument) => void }) {
+export default function Synth() {
   const controller = useMemo(() => new SynthController(), []);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
   useEffect(() => { controller.attach(); return () => controller.dispose(); }, [controller]);
   const range = `${synthNoteName(synthMidi(0, state.octave))} – ${synthNoteName(synthMidi(16, state.octave))}`;
+  const shortcutLabel = (code: string) => RANGE_SHORTCUTS.find((shortcut) => shortcut.code === code)?.label ?? code;
 
   function pressKey(event: PointerEvent<HTMLButtonElement>, offset: number) {
     if (event.button !== 0) return;
+    if (document.activeElement instanceof HTMLElement && document.activeElement.matches("input, textarea, select")) document.activeElement.blur();
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     controller.press(`pointer-${event.pointerId}`, offset);
@@ -42,13 +43,11 @@ export default function Synth({ onSelectInstrument }: { onSelectInstrument: (ins
       <p>This instrument is designed to be played on a larger screen with a physical keyboard.</p>
     </div>
     <div className="desktop-experience">
-      <header className="site-header">
-        <div className="brand"><span className="brand-mark"><SynthMark /></span><span>NERDBOARD<span className="brand-period">.</span></span></div>
-        <InstrumentSwitcher selected="synth" onSelect={onSelectInstrument} />
+      <div className="instrument-audio-state">
         <div className={`audio-status${state.hasPlayed && !state.audioUnavailable ? " is-live" : ""}`} role="status">
           <span className="status-dot" />{state.audioUnavailable ? "AUDIO UNAVAILABLE" : state.hasPlayed ? "AUDIO LIVE" : "PRESS A KEY TO BEGIN"}
         </div>
-      </header>
+      </div>
       <main>
         <section className="instrument-section" aria-label="Virtual synthesizer">
           <div className="section-heading">
@@ -83,7 +82,7 @@ export default function Synth({ onSelectInstrument }: { onSelectInstrument: (ins
                   onPointerDown={(event) => pressKey(event, key.offset)} onPointerUp={releaseKey}
                   onPointerCancel={releaseKey} onLostPointerCapture={releaseKey}
                   onClick={(event) => { if (event.detail === 0) controller.tap(key.offset); }}>
-                  <span className="piano-note-label">{name}</span><span className="piano-key-label">{key.key}</span>
+                  <span className="piano-note-label">{name}</span><span className="piano-key-label keyboard-hint">{key.key}</span>
                 </button>;
               })}
             </div>
@@ -92,15 +91,9 @@ export default function Synth({ onSelectInstrument }: { onSelectInstrument: (ins
               <span className="play-indicator">PULSE / SUB / FILTER / ECHO</span>
             </div>
           </div>
+          <RangeNavigator octave={state.octave} min={MIN_SYNTH_OCTAVE} max={MAX_SYNTH_OCTAVE} range={range} fullRange="C2–E7"
+            shortcuts={state.shortcuts} onOctave={(octave) => controller.setOctave(octave)} onShortcut={(direction, code) => controller.setShortcut(direction, code)} />
           <div className="piano-toolbar">
-            <div className="piano-octave-control">
-              <span className="piano-toolbar-label">OCTAVE</span>
-              <button type="button" className="piano-action" aria-label="Lower octave" disabled={state.octave === MIN_SYNTH_OCTAVE} onClick={() => controller.shiftOctave(-1)}>←</button>
-              <span className="piano-octave-value" aria-live="polite">C{state.octave}</span>
-              <button type="button" className="piano-action" aria-label="Higher octave" disabled={state.octave === MAX_SYNTH_OCTAVE} onClick={() => controller.shiftOctave(1)}>→</button>
-              <span className="piano-toolbar-hint">ARROW KEYS / STARTS AT C3</span>
-            </div>
-            <button type="button" className="piano-action piano-stop" onClick={controller.stopAll}>STOP ALL <span>ESC</span></button>
           </div>
         </section>
         <section className="play-section" aria-label="Synthesizer controls">
@@ -118,15 +111,13 @@ export default function Synth({ onSelectInstrument }: { onSelectInstrument: (ins
               <div className="piano-control-example"><span>RESET PRESET TO RETURN TO THE STARTING SOUND</span></div>
             </div>
             <div className="control-group">
-              <div className="control-title"><span className="control-number">03</span><div><h3>Go lower</h3><p>Try C2 or C3 for a fuller bass pluck.<br />Use Escape to stop notes and their echoes.</p></div></div>
-              <div className="piano-control-example"><span className="keycap">←</span><span className="keycap">→</span><span>LOWER / HIGHER</span></div>
+              <div className="control-title"><span className="control-number">03</span><div><h3>Explore the range</h3><p>Tap {shortcutLabel(state.shortcuts.lower)} / {shortcutLabel(state.shortcuts.higher)} to move by an octave.<br />The sounding note keeps its pitch until you play another.</p></div></div>
+              <div className="piano-control-example"><span className="keycap is-wide">{shortcutLabel(state.shortcuts.lower)}</span><span className="keycap is-wide">{shortcutLabel(state.shortcuts.higher)}</span><span>LOWER / HIGHER</span></div>
             </div>
           </div>
           <p className="synth-source-note">The original opening uses Reason’s NN-19 sampler. This preset recreates its character with synthesis; it is an approximation of the sound. <a href="https://www.reasonstudios.com/news/post/stromae" target="_blank" rel="noreferrer">Stromae’s breakdown ↗</a></p>
         </section>
-        <SongLessons instrument="synth" />
       </main>
-      <footer><span>NERDBOARD / EXPERIMENT 004</span><span>A LITTLE PULSE. A LOT OF GROOVE.</span></footer>
     </div>
   </div>;
 }

@@ -1,6 +1,8 @@
+import { STOP_SOUND_EVENT } from "../studioEvents";
 import { DrumAudioEngine } from "../audio/DrumAudioEngine";
 import { DRUM_PADS } from "./model";
 import type { DrumId } from "./model";
+import { publishPerformance } from "../practice/events";
 
 export type DrumSnapshot = {
   activePads: DrumId[];
@@ -34,6 +36,7 @@ export class DrumController {
   getSnapshot = (): DrumSnapshot => this.snapshot;
 
   attach(): void {
+    window.addEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.stopAll);
@@ -41,6 +44,7 @@ export class DrumController {
   }
 
   dispose(): void {
+    window.removeEventListener(STOP_SOUND_EVENT, this.stopAll);
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.stopAll);
@@ -59,6 +63,7 @@ export class DrumController {
     }
 
     this.voices.set(id, drum);
+    publishPerformance("drums", drum);
     this.audioUnavailable = false;
     this.hasPlayed = true;
     this.lastHit = drum;

@@ -1,0 +1,108 @@
+/* Studio hierarchy uses the existing instrument palette and controls. */
+html { min-width: 0; }
+.studio { max-width: 1680px; margin: 0 auto; padding: 0 clamp(18px, 3vw, 48px); }
+.studio-keyboard-required { display: none; }
+.studio-skip { position: fixed; left: 20px; top: -100px; z-index: 100; background: #ead4b4; padding: 12px; color: #161a15; }
+.studio-skip:focus { top: 12px; }
+.studio-header { display: flex; justify-content: space-between; align-items: center; gap: 30px; min-height: 76px; border-bottom: 1px solid #30372d; }
+.studio-brand { display: flex; flex-direction: column; gap: 8px; }
+.studio-brand .brand { gap: 0; font-size: 19px; }
+.studio-tagline { color: #a9b09f; font-size: 12px; }
+.studio-header .instrument-switcher { border: 0; background: transparent; padding: 0; gap: 4px; }
+.studio-header .instrument-switcher button { font-size: 13px; padding: 12px 14px; }
+.studio-header .instrument-switcher button span { display: none; }
+.studio-bar { display: flex; align-items: center; justify-content: space-between; min-height: 56px; gap: 18px; }
+.studio-activities { display: flex; gap: 6px; }
+.studio-activities button { border: 0; background: transparent; color: #aab09f; font-size: 14px; font-weight: 600; cursor: pointer; padding: 10px 20px; border-radius: 6px; }
+.studio-activities button[aria-pressed="true"] { background: #30362a; color: #f0c794; }
+.studio-activities button:hover { background: #242b20; color: #eee8dc; }
+.studio button:focus-visible, .studio a:focus-visible, .studio input:focus-visible, .studio select:focus-visible, .studio summary:focus-visible { outline: 2px solid #ebc28e; outline-offset: 3px; }
+.studio-hints { display: flex; align-items: center; gap: 9px; color: #b4bbab; font-size: 13px; cursor: pointer; }
+.studio-hints input { accent-color: #dbb581; width: 16px; height: 16px; }
+.studio-intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin: 8px 0 18px; }
+.studio-eyebrow { color: #c6a579; font-size: 10px; letter-spacing: .15em; font-weight: 700; }
+.studio-intro h1 { font-family: Georgia, serif; font-size: clamp(30px, 2.5vw, 38px); margin: 6px 0 0; font-weight: 400; color: #eee7d8; }
+.studio-intro p { color: #aab1a0; font-size: 14px; margin: 0 0 5px; }
+.studio-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start; padding-top: 16px; }
+.studio-instrument, .studio-companion { min-width: 0; }
+.studio-instrument .app-shell { min-height: 0; }
+.studio-instrument .desktop-experience { display: block; padding: 0; }
+.studio-instrument .site-header, .studio-instrument .small-screen-message, .studio-instrument footer, .studio-instrument .play-section, .studio-instrument .song-lessons { display: none; }
+.studio-instrument main { padding-top: 0; }
+.studio-instrument .instrument-section { padding-top: 0; }
+.instrument-audio-state { display: flex; justify-content: flex-end; min-height: 24px; margin-bottom: 12px; }
+.studio-companion { padding-top: 36px; }
+.studio-instrument .section-heading { height: auto; min-height: 42px; flex-wrap: wrap; gap: 10px; }
+.studio-instrument .tuning-label { font-size: 10px; letter-spacing: .07em; }
+.studio-instrument .piano-instrument { padding: 18px 20px 14px; }
+.studio-instrument .piano-topline, .studio-instrument .piano-bottomline, .studio-instrument .neck-bottomline { flex-wrap: wrap; gap: 10px; line-height: 1.7; }
+.studio-instrument .piano-topline { padding-bottom: 12px; }
+.studio-instrument .neck-topline > span { font-size: 8px; width: 115px; }
+.studio-instrument .fret-ruler > span { gap: 4px; font-size: 9px; }
+.studio-instrument .drum-pads { gap: 9px; }
+.studio-instrument .drum-pad { min-height: 160px; padding: 10px 8px 12px; }
+.studio-instrument .drum-pad-description { font-size: 10px; }
+.studio-companion { border-left: 1px solid #343b2e; padding-left: 28px; }
+.instrument-guide h2 { font-family: Georgia, serif; color: #e8dfcc; font-weight: 400; font-size: 25px; line-height: 1.25; margin: 12px 0; }
+.instrument-guide p, .instrument-guide li { font-size: 13px; color: #b8bfaf; line-height: 1.75; }
+.instrument-guide ul { padding-left: 18px; margin: 18px 0; }
+.instrument-guide li { padding-left: 4px; margin: 0 0 10px; }
+.instrument-guide details { border-top: 1px solid #343b2e; padding: 14px 0; }
+.instrument-guide summary { color: #dfc19a; font-size: 12px; cursor: pointer; line-height: 1.6; }
+.guide-map { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 8px; margin-top: 16px; }
+.guide-map span { display: flex; align-items: center; gap: 10px; color: #d6d6c8; font-size: 12px; }
+.studio kbd { font: 11px "Avenir Next", sans-serif; padding: 4px 7px; border-radius: 3px; color: #e6c799; background: #292f24; border: 1px solid #48513e; white-space: nowrap; }
+.guide-listening { border-top: 1px solid #343b2e; padding-top: 18px; margin-top: 24px; }
+.guide-listening h3 { color: #e0d2bb; font-size: 14px; font-weight: 600; }
+.instrument-guide .guide-stop { color: #969f8c; font-size: 11px; margin-top: 24px; }
+.studio-companion .song-lessons { padding-top: 28px; }
+.studio-companion .song-lesson-grid { grid-template-columns: 1fr; }
+.studio-companion .song-lesson-card { padding: 20px 0; background: transparent; border-left: 0; border-right: 0; }
+.studio-companion .song-lesson-heading { flex-wrap: wrap; gap: 10px; }
+.studio-companion .section-heading { height: auto; gap: 12px; min-height: 45px; flex-wrap: wrap; }
+.studio-companion .control-hint { display: none; }
+.studio-companion .song-lesson-phrase { display: block; }
+.studio-companion .song-phrase-label { display: block; margin-bottom: 8px; }
+.studio-companion .song-phrase-steps { flex-wrap: wrap; }
+.studio-footer { display: flex; justify-content: space-between; gap: 18px; padding: 24px 0; border-top: 1px solid #30372d; margin-top: 40px; color: #929c89; font-size: 11px; letter-spacing: .03em; }
+.studio[data-keyboard-hints="hide"] .piano-key-label, .studio[data-keyboard-hints="hide"] .drum-pad-key, .studio[data-keyboard-hints="hide"] .string-key, .studio[data-keyboard-hints="hide"] .song-step-key { visibility: hidden; }
+.studio[data-keyboard-hints="hide"] .keyboard-hint { visibility: hidden; }
+.studio-companion .practice-panel { margin-top: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.studio-companion .practice-heading { flex-direction: column; align-items: start; gap: 12px; }
+.studio-companion .practice-heading h2 { font-size: 25px; }
+.studio-companion .practice-settings { grid-template-columns: 1fr 1fr; gap: 14px; }
+.studio-companion .practice-tempo { grid-column: 1 / -1; }
+.studio-companion .practice-note { min-width: 74px; padding: 12px 9px; }
+.studio-companion .practice-toolbar { flex-direction: column; align-items: start; }
+.studio .session-audio { padding: 12px 0; margin: 0; border-width: 1px 0; border-radius: 0; background: transparent; }
+.studio .session-audio-note { margin-top: 8px; }
+.studio .session-audio-note.is-empty { margin: 0; }
+.studio .session-volume { width: auto; display: flex; align-items: center; gap: 16px; }
+.studio .session-volume > span { gap: 12px; }
+.studio .session-volume input { width: 140px; }
+.studio .instrument-audio-state { min-height: 18px; margin-bottom: 6px; }
+.studio .instrument-guide p, .studio .instrument-guide li { font-size: 14px; }
+.studio-instrument .piano-topline { height: 36px; }
+.studio-instrument .range-navigator { flex: 1; min-width: 0; padding: 16px 0; border-width: 0 0 1px; border-radius: 0; margin-top: 4px; }
+.studio-instrument .range-heading { align-items: start; flex-direction: column; gap: 8px; }
+.studio-instrument .range-row { flex-wrap: wrap; align-items: center; }
+.studio-instrument .range-banks { min-width: 200px; }
+.studio-instrument .range-bank { padding: 9px 5px; }
+.studio-instrument .range-shortcut-settings { flex-wrap: wrap; }
+.studio-instrument .piano-toolbar { align-items: start; flex-wrap: wrap; }
+.studio-instrument .piano-pedal-control { margin-top: 18px; }
+.studio-instrument .harmonium-panel { padding: 18px 0; gap: 20px; }
+@media (max-width: 1200px) {
+  .studio-workspace { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .studio-companion { border-left: 0; padding-left: 0; border-top: 1px solid #343b2e; padding-top: 24px; }
+  .instrument-guide ul { columns: 2; column-gap: 36px; }
+  .instrument-guide li { break-inside: avoid; }
+  .guide-map { grid-template-columns: repeat(4, 1fr); }
+  .studio-header { flex-wrap: wrap; padding: 20px 0; gap: 20px; }
+  .studio-header .instrument-switcher { flex-wrap: wrap; }
+}
+@media (max-width: 979px) {
+  .studio > :not(.studio-keyboard-required) { display: none; }
+  .studio > .studio-keyboard-required { display: flex; }
+}
+@media (prefers-reduced-motion: reduce) { .studio *, .studio *::before, .studio *::after { scroll-behavior: auto; transition-duration: 0s !important; animation-duration: 0s !important; } }

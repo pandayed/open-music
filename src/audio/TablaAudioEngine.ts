@@ -1,3 +1,4 @@
+import { connectAudioOutput } from "./output";
 import type { TablaBol } from "../tabla/model";
 
 const BOLS: readonly TablaBol[] = ["na", "tin", "tun", "te", "ge", "ke", "dha", "dhin"];
@@ -49,6 +50,7 @@ type TablaVoice = {
 /** Finite, cached synthesized bols; each combined bol uses one playback voice. */
 export class TablaAudioEngine {
   private context: AudioContext | null = null;
+  private disconnectOutput: (() => void) | null = null;
   private master: GainNode | null = null;
   private limiter: WaveShaperNode | null = null;
   private readonly voices = new Map<string, TablaVoice>();
@@ -58,6 +60,16 @@ export class TablaAudioEngine {
   private disposed = false;
 
   constructor(private readonly onVoiceEnd?: (id: string) => void) {}
+
+  async activate(): Promise<boolean> {
+    if (this.disposed) return false;
+    const context = this.getContext();
+    if (!context || context.state === "closed") return false;
+    try {
+      if (context.state === "suspended") await context.resume();
+      return context.state === "running";
+    } catch { return false; }
+  }
 
   play(id: string, bol: TablaBol): boolean {
     if (this.disposed || !BOLS.includes(bol)) return false;
@@ -120,6 +132,8 @@ export class TablaAudioEngine {
     this.voices.clear();
     for (const voice of [...this.connectedVoices]) this.stopImmediately(voice);
     this.sampleCache.clear();
+    this.disconnectOutput?.();
+    this.disconnectOutput = null;
     this.master?.disconnect();
     this.limiter?.disconnect();
     if (this.context && this.context.state !== "closed") void this.context.close().catch(() => {});
@@ -144,7 +158,8 @@ export class TablaAudioEngine {
           : Math.sign(value) * (0.6 + 0.3 * Math.tanh((magnitude - 0.6) / 0.3));
       }
       limiter.curve = curve;
-      master.connect(limiter).connect(context.destination);
+      master.connect(limiter);
+      this.disconnectOutput = connectAudioOutput(context, limiter);
       this.context = context;
       this.master = master;
       this.limiter = limiter;
