@@ -2,10 +2,11 @@ import type { Instrument } from "../InstrumentSwitcher";
 import { DRUM_PADS } from "../drums/model";
 import { TABLA_PADS } from "../tabla/model";
 import { getSongLessons } from "./lessons";
+import type { SynthPresetId } from "../synth/model";
 
 export type PracticeStep = { label: string; key: string; values: string[]; beats: number };
 export type PracticePhrase = { label: string; steps: PracticeStep[] };
-export type PracticeExercise = { id: string; title: string; instruction: string; phrases: PracticePhrase[] };
+export type PracticeExercise = { id: string; title: string; instruction: string; phrases: PracticePhrase[]; synthPreset?: SynthPresetId };
 
 function noteMidi(label: string): string | null {
   const match = /^([A-G])([♯#]?)([0-8])$/.exec(label);
@@ -28,6 +29,7 @@ export function getPracticeExercises(instrument: Instrument): PracticeExercise[]
     id: `${instrument}-${lessonIndex}`,
     title: lesson.title,
     instruction: lesson.instruction,
+    synthPreset: lesson.synthPreset,
     phrases: lesson.phrases.map((phrase) => ({
       label: phrase.label,
       steps: phrase.steps.filter((item) => !item.value.startsWith("Octave ")).map((item) => {

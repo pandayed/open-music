@@ -8,7 +8,7 @@ import { TablaAudioEngine } from "../audio/TablaAudioEngine";
 import type { DrumId } from "../drums/model";
 import type { TablaBol } from "../tabla/model";
 import { CHORDS } from "../guitar/model";
-import { PLUCK_PRESET } from "../synth/model";
+import { PLUCK_PRESET, TOKYO_BELL_PRESET, type SynthPresetId } from "../synth/model";
 
 export type ReferencePlayer = {
   activate(): Promise<boolean>;
@@ -17,7 +17,7 @@ export type ReferencePlayer = {
 };
 
 /** Independent voices: demonstrations cannot create practice hits or change a player's controls. */
-export function createReferencePlayer(instrument: Instrument): ReferencePlayer {
+export function createReferencePlayer(instrument: Instrument, synthPreset: SynthPresetId = "alors-pluck"): ReferencePlayer {
   const engine = instrument === "piano" ? new PianoAudioEngine()
     : instrument === "guitar" ? new GuitarAudioEngine()
     : instrument === "drums" ? new DrumAudioEngine()
@@ -38,7 +38,7 @@ export function createReferencePlayer(instrument: Instrument): ReferencePlayer {
       for (const value of values) {
         const id = `reference-${serial++}`;
         if (engine instanceof PianoAudioEngine) { engine.play(id, Number(value)); releaseLater(id, durationMs); }
-        else if (engine instanceof SynthAudioEngine) { engine.play(id, Number(value), PLUCK_PRESET); releaseLater(id, durationMs); }
+        else if (engine instanceof SynthAudioEngine) { engine.play(id, Number(value), synthPreset === "tokyo-bell" ? TOKYO_BELL_PRESET : PLUCK_PRESET, synthPreset); releaseLater(id, durationMs); }
         else if (engine instanceof HarmoniumAudioEngine) { engine.setPressure(0.75); engine.play(id, Number(value)); releaseLater(id, durationMs); }
         else if (engine instanceof DrumAudioEngine) engine.play(id, value as DrumId);
         else if (engine instanceof TablaAudioEngine) engine.play(id, value as TablaBol);

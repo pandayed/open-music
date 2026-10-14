@@ -71,12 +71,15 @@ To verify manually, select **Tabla**, try all eight keys and mouse pads, play `A
 ## Synthesizer
 
 - Opens with an **Alors-style pluck** preset: an original synthesized approximation of the opening sound in Stromae's *Alors on danse*.
+- Choose **Tokyo Drift bell** for an original synthesized metallic bell inspired by Teriyaki Boyz's opening riff. Selecting it sets C4 and a short decay with no echo. It approximates the sound; the original production device/preset is not verified.
 - Uses the piano's white/black key mapping and mouse controls. Starts at C3–E4 on first use, then remembers the range. Left/Right Shift or the range banks move from C2 to C6. Shortcuts can be changed; arrows still work. Changing range lets the current note finish normally.
 - Mono playing: each new note takes over; held keys naturally decay. Release and press a key again to retrigger it. Enter/Space activates a focused key as a short note.
 - **Brightness**, **Decay**, and **Echo** affect the next note. Echo adds one repeat at a fixed eighth-note delay of about 246 ms (122 BPM).
-- **Reset preset** restores the starting tone and C3 octave. `Escape`, **Stop all**, blur, tab hiding, and instrument switching clear notes and echoes.
+- **Reset preset** restores the selected sound and its starting octave (C3 for Alors, C4 for Tokyo Drift). Selecting a preset clears previous notes and echoes. `Escape`, **Stop all**, blur, tab hiding, and instrument switching clear notes and echoes.
 
 The original opening bass sound was played through Reason's NN-19 sampler, as shown in [Stromae's Reason interview](https://www.reasonstudios.com/news/post/stromae). This app uses two pulse oscillators, a triangle sub, a closing low-pass filter, and a short gain envelope, informed by [Syntorial's pluck remake](https://www.syntorial.com/preset-recipe/stromae-alors-on-danse-pluck/). It does not include the original sample, saxophone, drum backing, or song playback.
+
+The Tokyo Drift bell uses two sine carriers with decaying, inharmonic frequency modulation. In **Learn**, the short opening lesson shows four A♯4 taps (`U U U U`), then the core riff (`U J P U U`) at C4. The notes follow [Piano Letter Notes' transcription](https://pianoletternotes.blogspot.com/2019/02/tokyo-drift-by-teriyaki-boyz.html); rhythm is simplified for beginners. **Practice → Tokyo Drift → Listen** uses the bell preset for its reference audio. Select the bell preset above the keyboard before playing along. No recording samples or backing track are included.
 
 ## Harmonium
 

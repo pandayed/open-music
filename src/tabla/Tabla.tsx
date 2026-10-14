@@ -62,7 +62,7 @@ export default function Tabla() {
                       onClick={(event) => { if (event.detail === 0) controller.hit(pad.id); }}
                     >
                       <span className="drum-pad-top"><span className="drum-pad-number">0{index + 1} / {pad.family === "both" ? "BOTH DRUMS" : pad.family.toUpperCase()}</span><span className="drum-ring-indicator" aria-hidden="true" /></span>
-                      <span className="drum-face tabla-face" aria-hidden="true"><span className={`keycap${active ? " is-active" : ""}`}>{pad.key}</span></span>
+                      <span className="drum-face tabla-face" aria-hidden="true"><span className={`keycap keyboard-hint${active ? " is-active" : ""}`}>{pad.key}</span></span>
                       <span className="drum-pad-name">{pad.name}</span>
                       <span className="drum-pad-description">{pad.description}</span>
                     </button>

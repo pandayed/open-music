@@ -2,6 +2,7 @@ import type { Instrument } from "./InstrumentSwitcher";
 import { CHORDS, FRETS, STRINGS } from "./guitar/model";
 import { DRUM_PADS } from "./drums/model";
 import { TABLA_PADS } from "./tabla/model";
+import { PIANO_KEYS } from "./piano/model";
 
 const guides: Record<Instrument, { title: string; start: string; tips: string[]; lesson: string }> = {
   piano: {
@@ -10,9 +11,9 @@ const guides: Record<Instrument, { title: string; start: string; tips: string[];
     lesson: "A chord combines notes. A major triad uses a root, the note four semitones above it, and the note seven semitones above it. Practise each note separately, then together. Listen to the difference between releasing the keys and releasing the sustain pedal.",
   },
   synth: {
-    title: "Shape a sound", start: "Use the same white and black note positions as the piano. Start at C3 for the pluck preset.",
-    tips: ["Tap and release to retrigger. This preset plays one lead note at a time.", "Brightness changes the tone; Decay changes how long a note fades; Echo adds a repeat.", "Tap the range shortcuts shown below the keys. The defaults are Left and Right Shift. The current note finishes normally.", "Reset preset restores the tone and starting range."],
-    lesson: "A pluck has a quick beginning and a fading body. Start with a slow repeated note, then change one setting at a time. Listen to how brightness changes the harmonics and decay changes the space between notes.",
+    title: "Shape a sound", start: "Use the same white and black note positions as the piano. Choose Alors pluck at C3 or Tokyo Drift bell at C4.",
+    tips: ["Tap and release to retrigger. Both presets play one lead note at a time.", "Choose Tokyo Drift bell, then open Songs & example rhythms for its opening riff. At C4, try U J P U U: A♯4, B4, D♯5, A♯4, A♯4.", "Brightness changes the tone; Decay changes how long a note fades; Echo adds a repeat.", "Tap the range shortcuts shown below the keys. The defaults are Left and Right Shift. The current note finishes normally.", "Reset preset restores the selected sound and its starting range."],
+    lesson: "A pluck has a quick beginning and a fading body. The bell adds a metallic attack and ring. Start with a slow repeated note, then change one setting at a time. Listen to how brightness changes the tone and decay changes the space between notes.",
   },
   harmonium: {
     title: "Notes and a breath of air", start: "Play white notes with the home row and black notes with the row above. Hold notes while supplying air.",
@@ -42,8 +43,9 @@ export function InstrumentGuide({ instrument, compact = false }: { instrument: I
     <span className="studio-eyebrow">{compact ? "AT YOUR FINGERTIPS" : "GET TO KNOW YOUR INSTRUMENT"}</span>
     <h2>{guide.title}</h2>
     <p>{guide.start}</p>
+    {(instrument === "piano" || instrument === "synth" || instrument === "harmonium") && <div className="guide-keyboard-map"><h3>Find a key</h3><p>Match these letters to your computer keyboard. Note names and the current range appear on the instrument.</p><div className="guide-map">{PIANO_KEYS.map((key) => <span key={key.code}><kbd>{key.key}</kbd>{key.black ? "Black note" : "White note"}</span>)}</div></div>}
     <ul>{guide.tips.map((tip) => <li key={tip}>{tip}</li>)}</ul>
-    {instrument === "guitar" && <details><summary>All string, fret and chord controls</summary>
+    {instrument === "guitar" && <details open><summary>All string, fret and chord controls</summary>
       <div className="guide-map">{STRINGS.map((item) => <span key={item.code}><kbd>{item.key}</kbd>{item.name}</span>)}</div>
       <div className="guide-map">{FRETS.map((item) => <span key={item.code}><kbd>{item.key}</kbd>{item.label}</span>)}</div>
       <div className="guide-map">{CHORDS.map((item) => <span key={item.code}><kbd>{item.key}</kbd>{item.name}</span>)}</div>

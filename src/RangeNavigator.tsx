@@ -21,7 +21,7 @@ export function RangeNavigator({ octave, min, max, range, fullRange, shortcuts, 
     </div>
     <div className="range-row">
       <button type="button" className="piano-action range-step" disabled={octave === min} onClick={() => onOctave(octave - 1)} aria-label={`Lower octave, ${label(shortcuts.lower)}`}>
-        <span aria-hidden="true">−</span> {label(shortcuts.lower)}
+        <span aria-hidden="true">−</span> Lower <span className="range-shortcut-label">{label(shortcuts.lower)}</span>
       </button>
       <div className="range-banks" role="group" aria-label="Select keyboard range">
         {Array.from({ length: max - min + 1 }, (_, index) => index + min).map((bank) =>
@@ -31,7 +31,7 @@ export function RangeNavigator({ octave, min, max, range, fullRange, shortcuts, 
           </button>)}
       </div>
       <button type="button" className="piano-action range-step" disabled={octave === max} onClick={() => onOctave(octave + 1)} aria-label={`Higher octave, ${label(shortcuts.higher)}`}>
-        {label(shortcuts.higher)} <span aria-hidden="true">+</span>
+        Higher <span className="range-shortcut-label">{label(shortcuts.higher)}</span> <span aria-hidden="true">+</span>
       </button>
     </div>
     <details className="range-preferences">

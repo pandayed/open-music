@@ -155,7 +155,7 @@ function InstrumentPractice({ instrument }: { instrument: Instrument }) {
     stop();
     const attempt = attemptRef.current;
     const clock = new PracticeClock();
-    const player = nextMode === "demo" ? createReferencePlayer(instrument) : null;
+    const player = nextMode === "demo" ? createReferencePlayer(instrument, exercise.synthPreset) : null;
     setupRef.current = { clock, player };
     setMode("starting");
     // Both activations begin synchronously inside this button gesture.

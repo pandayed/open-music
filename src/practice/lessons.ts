@@ -1,5 +1,6 @@
 import type { Instrument } from "../InstrumentSwitcher";
 import { TABLA_PADS, TABLA_PRACTICE } from "../tabla/model";
+import type { SynthPresetId } from "../synth/model";
 
 export type LessonStep = { value: string; key: string; beats: number };
 export type LessonPhrase = { label: string; steps: LessonStep[] };
@@ -8,6 +9,7 @@ export type SongLesson = {
   detail: string;
   instruction: string;
   phrases: LessonPhrase[];
+  synthPreset?: SynthPresetId;
 };
 
 const pianoLessons: SongLesson[] = [
@@ -81,11 +83,30 @@ const drumLessons: SongLesson[] = [
 const synthLessons: SongLesson[] = [
   {
     title: "Alors on danse",
+    synthPreset: "alors-pluck",
     detail: "OPENING PLUCK · START AT C2",
     instruction: "Select C2 in the keyboard range for the first phrase, then C3 for the second. Play the notes in order and use the range controls when changing phrases. Use short taps; release each key before pressing it again.",
     phrases: [
       { label: "C2", steps: ["G♯2:Y", "C♯3:O", "Octave C3:Higher range"].map(step) },
       { label: "C3", steps: ["G♯3:Y", "G♯3:Y", "G♯3:Y", "E3:D", "A3:H", "D♯3:E", "D♯3:E", "D♯3:E", "Octave C2:Lower range"].map(step) },
+    ],
+  },
+  {
+    title: "Tokyo Drift",
+    synthPreset: "tokyo-bell",
+    detail: "OPENING BELL RIFF · START AT C4",
+    instruction: "Select Tokyo Drift bell and choose C4 in the keyboard range. Tap U four times for the opening, then loop U J P U U. These are A♯4, B4 and D♯5. Release between taps so the bell strikes again. In Practice, listen to each phrase, start slowly, then increase the tempo. The rhythm is a beginner arrangement; the bell is an approximation of the recording.",
+    // Short opening excerpt, using this creator-hosted note transcription:
+    // https://pianoletternotes.blogspot.com/2019/02/tokyo-drift-by-teriyaki-boyz.html
+    phrases: [
+      { label: "OPENING", steps: ["A♯4:U", "A♯4:U", "A♯4:U", "A♯4:U"].map(step) },
+      { label: "RIFF", steps: [
+        { value: "A♯4", key: "U", beats: 0.75 },
+        { value: "B4", key: "J", beats: 0.75 },
+        { value: "D♯5", key: "P", beats: 0.5 },
+        { value: "A♯4", key: "U", beats: 1 },
+        { value: "A♯4", key: "U", beats: 1 },
+      ] },
     ],
   },
 ];

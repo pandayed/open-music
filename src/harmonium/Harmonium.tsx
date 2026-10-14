@@ -66,54 +66,19 @@ export default function Harmonium() {
             <span className="tuning-label">HARMONIUM <span>{range} · A4 = 440 Hz</span></span>
           </div>
           <div className="piano-instrument harmonium-instrument">
-            <div className="harmonium-panel">
-              <div className="harmonium-bellows">
-                <span className="synth-kicker">HARMONIUM / BELLOWS</span>
-                <div className="harmonium-modes" role="group" aria-label="Bellows mode">
-                  {MODES.map((mode) => <button key={mode.value} type="button" className="piano-action"
-                    aria-pressed={state.mode === mode.value} disabled={mode.value === "hinge" && state.hinge.kind !== "connected"}
-                    aria-describedby={mode.value === "hinge" && state.hinge.kind !== "connected" ? "harmonium-hinge-help" : undefined}
-                    onClick={() => controller.setMode(mode.value)}>{mode.label}</button>)}
-                </div>
-                <p id="harmonium-hinge-help" className="harmonium-hinge-help">
-                  {state.hinge.kind === "connected" ? status : "Hinge control needs a compatible lid sensor."} <button type="button" className="hinge-inline-link" onClick={() => setSetupOpen(true)}>{state.hinge.kind === "connected" ? "Sensor settings" : "Check compatibility and set up"}</button>
-                </p>
-                <p className="harmonium-mode-hint">{state.mode === "manual" ? "Hold Space or the pump button to fill the bellows. Air fades when you stop."
-                  : state.mode === "steady" ? "A steady air supply lets you play freely with both hands."
-                    : "Gentle lid strokes fill the bellows. Sensitivity adjusts the air supplied by each movement."}</p>
-                <button type="button" className={`piano-action harmonium-pump${state.pumping ? " is-pumping" : ""}`}
-                  disabled={state.mode !== "manual"} aria-pressed={state.pumping}
-                  onPointerDown={startPump} onPointerUp={endPump} onPointerCancel={endPump} onLostPointerCapture={endPump}
-                  onKeyDown={(event) => {
-                    if (event.code === "Space" || event.code === "Enter") {
-                      event.preventDefault(); event.stopPropagation();
-                      controller.startPump("focused-pump");
-                    }
-                  }}
-                  onKeyUp={(event) => {
-                    if (event.code === "Space" || event.code === "Enter") {
-                      event.preventDefault(); event.stopPropagation(); controller.endPump("focused-pump");
-                    }
-                  }}
-                  onBlur={() => controller.endPump("focused-pump")}
-                  onClick={(event) => { if (event.detail === 0) controller.pumpOnce(); }}>
-                  {state.pumping ? "PUMPING AIR" : "HOLD TO PUMP"}<span>SPACE</span>
-                </button>
+            <div className="harmonium-sensor-entry">
+              <div className="harmonium-sensor-copy">
+                <h3>Play with your laptop lid</h3>
+                <p>Connect a compatible lid sensor to supply air as you move the lid. Setup checks compatibility before you connect.</p>
               </div>
-              <div className="harmonium-pressure">
-                <div className="harmonium-pressure-heading"><span>AIR PRESSURE</span><output>{pressure}%</output></div>
-                <div className="harmonium-air-meter" role="meter" aria-label="Air pressure" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pressure}>
-                  <span style={{ width: `${pressure}%` }} />
-                </div>
-                <div className="harmonium-folds" style={{ "--air": state.pressure } as CSSProperties} aria-hidden="true">
-                  {Array.from({ length: 9 }, (_, index) => <span key={index} />)}
-                </div>
-                <div className="harmonium-bellows-settings">
-                  <label>Sensitivity <input aria-label="Bellows sensitivity" type="range" min="0.5" max="6" step="0.1" value={state.sensitivity} onChange={(event) => controller.setSensitivity(Number(event.target.value))} /><output>{state.sensitivity.toFixed(1)}×</output></label>
-                  <label>Air retention <select value={state.retention} onChange={(event) => controller.setRetention(event.target.value === "natural" ? "natural" : "smooth")}><option value="smooth">Smooth · longer air</option><option value="natural">Natural · quicker fade</option></select></label>
-                </div>
-                <p>{pressure === 0 ? "No air · pump or choose Steady air to hear held notes." : "Hold a note or a chord. Air controls its volume."}</p>
+              <div className="harmonium-sensor-entry-actions">
+                <button type="button" className="piano-action harmonium-connect" onClick={() => setSetupOpen(true)}
+                  aria-haspopup="dialog">{state.hinge.kind === "connected" ? "Sensor settings" : state.hinge.kind === "connecting" ? "Connection in progress…" : "Connect lid sensor"}</button>
+                <button type="button" className="piano-action" onClick={() => setSetupOpen(true)} aria-haspopup="dialog">Setup help</button>
               </div>
+              <p id="harmonium-hinge-help" className="harmonium-sensor-entry-status" role="status">
+                {state.hinge.kind === "idle" ? "Hinge bellows needs a connected sensor. Manual pump and Steady air work without one." : status}
+              </p>
             </div>
             <div className="piano-keyboard" role="group" aria-label={`Harmonium keyboard, ${range}`}>
               {HARMONIUM_KEYS.map((key) => {
@@ -135,6 +100,55 @@ export default function Harmonium() {
               <span className="piano-note-readout">{names.length ? names.join(" · ") : `C${state.octave} IS A / HOLD KEYS TO PLAY`}</span>
               <span className="play-indicator">{heldMidi.size ? pressure === 0 ? "KEYS HELD / WAITING FOR AIR" : `${heldMidi.size} ${heldMidi.size === 1 ? "REED" : "REEDS"} SOUNDING` : "READY TO PLAY"}</span>
             </div>
+            <div className="harmonium-panel">
+              <div className="harmonium-bellows">
+                <span className="synth-kicker">CHOOSE YOUR AIR SUPPLY</span>
+                <div className="harmonium-modes" role="group" aria-label="Bellows mode">
+                  {MODES.map((mode) => <button key={mode.value} type="button" className="piano-action"
+                    aria-pressed={state.mode === mode.value} disabled={mode.value === "hinge" && state.hinge.kind !== "connected"}
+                    aria-describedby={mode.value === "hinge" && state.hinge.kind !== "connected" ? "harmonium-hinge-help" : undefined}
+                    onClick={() => controller.setMode(mode.value)}>{mode.label}</button>)}
+                </div>
+                <p className="harmonium-mode-hint">{state.mode === "manual" ? "Hold Space or the pump button to fill the bellows. Air fades when you stop."
+                  : state.mode === "steady" ? "A steady air supply lets you play freely with both hands."
+                    : "Gentle lid strokes fill the bellows. Sensitivity adjusts the air supplied by each movement."}</p>
+                <button type="button" className={`piano-action harmonium-pump${state.pumping ? " is-pumping" : ""}`}
+                  disabled={state.mode !== "manual"} aria-pressed={state.pumping}
+                  onPointerDown={startPump} onPointerUp={endPump} onPointerCancel={endPump} onLostPointerCapture={endPump}
+                  onKeyDown={(event) => {
+                    if (event.code === "Space" || event.code === "Enter") {
+                      event.preventDefault(); event.stopPropagation();
+                      controller.startPump("focused-pump");
+                    }
+                  }}
+                  onKeyUp={(event) => {
+                    if (event.code === "Space" || event.code === "Enter") {
+                      event.preventDefault(); event.stopPropagation(); controller.endPump("focused-pump");
+                    }
+                  }}
+                  onBlur={() => controller.endPump("focused-pump")}
+                  onClick={(event) => { if (event.detail === 0) controller.pumpOnce(); }}>
+                  {state.pumping ? "Pumping air" : "Hold to pump"}<span>SPACE</span>
+                </button>
+              </div>
+              <div className="harmonium-pressure">
+                <div className="harmonium-pressure-heading"><span>AIR PRESSURE</span><output>{pressure}%</output></div>
+                <div className="harmonium-air-meter" role="meter" aria-label="Air pressure" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pressure}>
+                  <span style={{ width: `${pressure}%` }} />
+                </div>
+                <div className="harmonium-folds" style={{ "--air": state.pressure } as CSSProperties} aria-hidden="true">
+                  {Array.from({ length: 9 }, (_, index) => <span key={index} />)}
+                </div>
+                <p>{pressure === 0 ? "No air · pump or choose Steady air to hear held notes." : "Hold a note or a chord. Air controls its volume."}</p>
+              </div>
+            </div>
+            <details className="harmonium-bellows-options">
+              <summary>Bellows settings <span>Sensitivity &amp; air retention</span></summary>
+              <div className="harmonium-bellows-settings">
+                <label>Sensitivity <input aria-label="Bellows sensitivity" type="range" min="0.5" max="6" step="0.1" value={state.sensitivity} onChange={(event) => controller.setSensitivity(Number(event.target.value))} /><output>{state.sensitivity.toFixed(1)}×</output></label>
+                <label>Air retention <select value={state.retention} onChange={(event) => controller.setRetention(event.target.value === "natural" ? "natural" : "smooth")}><option value="smooth">Smooth · longer air</option><option value="natural">Natural · quicker fade</option></select></label>
+              </div>
+            </details>
           </div>
           <div className="piano-toolbar">
             <RangeNavigator octave={state.octave} min={MIN_OCTAVE} max={MAX_OCTAVE} range={range} fullRange="C2–E7" shortcuts={state.shortcuts}

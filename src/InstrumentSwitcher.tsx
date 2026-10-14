@@ -9,7 +9,6 @@ export function InstrumentSwitcher({ selected, onSelect }: {
       className="instrument-switcher"
       aria-label="Choose an instrument"
       onKeyDown={(event) => { if (event.code === "Space") event.stopPropagation(); }}
-      onKeyUp={(event) => { if (event.code === "Space") event.stopPropagation(); }}
     >
       <button type="button" aria-pressed={selected === "guitar"} onClick={() => onSelect("guitar")}>
         <span>01</span> Guitar

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import { SynthController } from "./SynthController";
-import { MAX_SYNTH_OCTAVE, MIN_SYNTH_OCTAVE, SYNTH_KEYS, synthMidi, synthNoteName } from "./model";
+import { MAX_SYNTH_OCTAVE, MIN_SYNTH_OCTAVE, SYNTH_KEYS, SYNTH_PRESETS, synthMidi, synthNoteName } from "./model";
 import type { SynthSettings } from "./model";
 import { RangeNavigator } from "../RangeNavigator";
 import { RANGE_SHORTCUTS } from "../preferences";
@@ -24,6 +24,8 @@ const TONE_CONTROLS: { key: keyof SynthSettings; label: string; max: number; min
 export default function Synth() {
   const controller = useMemo(() => new SynthController(), []);
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
+  const preset = SYNTH_PRESETS.find((item) => item.id === state.preset)!;
+  const isBell = state.preset === "tokyo-bell";
   useEffect(() => { controller.attach(); return () => controller.dispose(); }, [controller]);
   const range = `${synthNoteName(synthMidi(0, state.octave))} – ${synthNoteName(synthMidi(16, state.octave))}`;
   const shortcutLabel = (code: string) => RANGE_SHORTCUTS.find((shortcut) => shortcut.code === code)?.label ?? code;
@@ -52,23 +54,27 @@ export default function Synth() {
         <section className="instrument-section" aria-label="Virtual synthesizer">
           <div className="section-heading">
             <div className="section-heading-title"><span className="section-index">01</span><h2>THE INSTRUMENT</h2></div>
-            <span className="tuning-label">MONO PLUCK <span>{range} · A4 = 440 Hz</span></span>
+            <span className="tuning-label">{isBell ? "MONO BELL" : "MONO PLUCK"} <span>{range} · A4 = 440 Hz</span></span>
           </div>
           <div className="piano-instrument synth-instrument">
             <div className="synth-panel">
               <div className="synth-preset">
-                <span className="synth-kicker">SYNTHESIZER / PRESET 01</span><h1>Alors-style pluck</h1>
-                <p>A punchy, hollow pluck inspired by the opening of <em>Alors on danse</em>. Play one note at a time.</p>
-                <button type="button" className="piano-action synth-reset" onClick={() => controller.resetPreset()}>RESET PRESET</button>
+                <span className="synth-kicker">SYNTHESIZER / CHOOSE A SOUND</span>
+                <div className="synth-preset-options" role="group" aria-label="Synthesizer preset">
+                  {SYNTH_PRESETS.map((item) => <button type="button" key={item.id} className="piano-action" aria-pressed={state.preset === item.id}
+                    onClick={() => controller.selectPreset(item.id)}>{item.id === "tokyo-bell" ? "Tokyo Drift bell" : "Alors pluck"}</button>)}
+                </div>
+                <h1>{preset.name}</h1>
+                <p>{preset.description}{isBell && " Open How to play for the opening-riff tutorial."}</p>
               </div>
-              <div className="synth-tone-controls" role="group" aria-label="Pluck tone controls">
+              <details className="synth-tone-settings"><summary>Sound settings</summary><div className="synth-tone-controls" role="group" aria-label="Synthesizer tone controls">
                 {TONE_CONTROLS.map((control) => <label key={control.key} className="synth-slider">
                   <span>{control.label} <output>{state.settings[control.key]}{control.unit}</output></span>
                   <input type="range" aria-label={control.label} min={control.min} max={control.max} step={control.step}
                     value={state.settings[control.key]} onChange={(event) => controller.setSetting(control.key, Number(event.target.value))} />
                   <span className="synth-slider-hint">{control.hint}</span>
                 </label>)}
-              </div>
+              </div><button type="button" className="piano-action synth-reset" onClick={() => controller.resetPreset()}>Reset preset</button></details>
             </div>
             <div className="piano-keyboard" role="group" aria-label={`Synthesizer keyboard, ${range}`}>
               {SYNTH_KEYS.map((key) => {
@@ -88,7 +94,7 @@ export default function Synth() {
             </div>
             <div className="piano-bottomline">
               <span className="piano-note-readout">{state.note ? synthNoteName(state.note.midi) : `C${state.octave} IS A / PLAY A SHORT, REPEATING PATTERN`}</span>
-              <span className="play-indicator">PULSE / SUB / FILTER / ECHO</span>
+              <span className="play-indicator">{isBell ? "METALLIC BELL / FILTER / ECHO" : "PULSE / SUB / FILTER / ECHO"}</span>
             </div>
           </div>
           <RangeNavigator octave={state.octave} min={MIN_SYNTH_OCTAVE} max={MAX_SYNTH_OCTAVE} range={range} fullRange="C2–E7"
@@ -103,7 +109,7 @@ export default function Synth() {
           </div>
           <div className="piano-controls">
             <div className="control-group">
-              <div className="control-title"><span className="control-number">01</span><div><h3>Play the pluck</h3><p>Use the same keys as the piano, or click a key.<br />Each new note takes over the melody.</p></div></div>
+              <div className="control-title"><span className="control-number">01</span><div><h3>{isBell ? "Play the bell" : "Play the pluck"}</h3><p>Use the same keys as the piano, or click a key.<br />Each new note takes over the melody.</p></div></div>
               <div className="piano-control-example"><span className="keycap">A</span><span className="keycap">W</span><span className="keycap">S</span><span>C / C♯ / D</span></div>
             </div>
             <div className="control-group">
@@ -115,7 +121,9 @@ export default function Synth() {
               <div className="piano-control-example"><span className="keycap is-wide">{shortcutLabel(state.shortcuts.lower)}</span><span className="keycap is-wide">{shortcutLabel(state.shortcuts.higher)}</span><span>LOWER / HIGHER</span></div>
             </div>
           </div>
-          <p className="synth-source-note">The original opening uses Reason’s NN-19 sampler. This preset recreates its character with synthesis; it is an approximation of the sound. <a href="https://www.reasonstudios.com/news/post/stromae" target="_blank" rel="noreferrer">Stromae’s breakdown ↗</a></p>
+          {isBell
+            ? <p className="synth-source-note">An original synthesized approximation of the metallic opening sound, with no audio from the recording. The tutorial teaches a short beginner arrangement. <a href="https://pianoletternotes.blogspot.com/2019/02/tokyo-drift-by-teriyaki-boyz.html" target="_blank" rel="noreferrer">Opening note reference ↗</a></p>
+            : <p className="synth-source-note">The original opening uses Reason’s NN-19 sampler. This preset recreates its character with synthesis; it is an approximation of the sound. <a href="https://www.reasonstudios.com/news/post/stromae" target="_blank" rel="noreferrer">Stromae’s breakdown ↗</a></p>}
         </section>
       </main>
     </div>

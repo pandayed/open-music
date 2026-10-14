@@ -1,7 +1,7 @@
 import { STOP_SOUND_EVENT } from "../studioEvents";
 import { SynthAudioEngine } from "../audio/SynthAudioEngine";
-import { MAX_SYNTH_OCTAVE, MIN_SYNTH_OCTAVE, PLUCK_PRESET, SYNTH_KEYS, synthMidi } from "./model";
-import type { SynthSettings } from "./model";
+import { MAX_SYNTH_OCTAVE, MIN_SYNTH_OCTAVE, PLUCK_PRESET, SYNTH_KEYS, SYNTH_PRESETS, synthMidi } from "./model";
+import type { SynthPresetId, SynthSettings } from "./model";
 import { isRangeShortcut, readOctave, readRangeShortcuts, writePreference } from "../preferences";
 import type { RangeShortcuts } from "../preferences";
 import { publishPerformance } from "../practice/events";
@@ -11,6 +11,7 @@ export type SynthSnapshot = {
   note: SynthNote | null;
   octave: number;
   settings: SynthSettings;
+  preset: SynthPresetId;
   hasPlayed: boolean;
   audioUnavailable: boolean;
   shortcuts: RangeShortcuts;
@@ -29,10 +30,11 @@ export class SynthController {
   private octave = readOctave("synth", 3, MIN_SYNTH_OCTAVE, MAX_SYNTH_OCTAVE);
   private shortcuts = readRangeShortcuts("synth");
   private settings = { ...PLUCK_PRESET };
+  private preset: SynthPresetId = "alors-pluck";
   private hasPlayed = false;
   private audioUnavailable = false;
   private snapshot: SynthSnapshot = {
-    note: null, octave: this.octave, settings: { ...PLUCK_PRESET }, hasPlayed: false, audioUnavailable: false, shortcuts: this.shortcuts,
+    note: null, octave: this.octave, settings: { ...PLUCK_PRESET }, preset: this.preset, hasPlayed: false, audioUnavailable: false, shortcuts: this.shortcuts,
   };
 
   subscribe = (listener: () => void): (() => void) => {
@@ -63,7 +65,7 @@ export class SynthController {
     if (this.heldSources.has(source) || !SYNTH_KEYS.some((key) => key.offset === offset)) return;
     const id = `synth-${++this.serial}`;
     const midi = synthMidi(offset, this.octave);
-    if (!this.engine.play(id, midi, this.settings)) {
+    if (!this.engine.play(id, midi, this.settings, this.preset)) {
       this.audioUnavailable = true;
       this.publish();
       return;
@@ -118,9 +120,16 @@ export class SynthController {
   }
 
   resetPreset(): void {
+    this.selectPreset(this.preset);
+  }
+
+  selectPreset(id: SynthPresetId): void {
+    const preset = SYNTH_PRESETS.find((item) => item.id === id);
+    if (!preset) return;
     this.stopAll();
-    this.settings = { ...PLUCK_PRESET };
-    this.octave = 3;
+    this.preset = preset.id;
+    this.settings = { ...preset.settings };
+    this.octave = preset.octave;
     writePreference("synth:octave", this.octave);
     this.publish();
   }
@@ -160,7 +169,7 @@ export class SynthController {
   private onVisibilityChange = (): void => { if (document.hidden) this.stopAll(); };
   private publish(): void {
     this.snapshot = {
-      note: this.note, octave: this.octave, settings: this.settings,
+      note: this.note, octave: this.octave, settings: this.settings, preset: this.preset,
       hasPlayed: this.hasPlayed, audioUnavailable: this.audioUnavailable,
       shortcuts: this.shortcuts,
     };

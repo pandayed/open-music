@@ -1,5 +1,5 @@
 import { connectAudioOutput } from "./output";
-import type { SynthSettings } from "../synth/model";
+import type { SynthPresetId, SynthSettings } from "../synth/model";
 
 type SynthVoice = {
   id: string;
@@ -12,7 +12,7 @@ type SynthVoice = {
 const ECHO_SECONDS = 60 / 122 / 2;
 const VOICE_LIMIT = 8;
 
-/** An original mono pluck approximation, not the recording's NN-19 sample. */
+/** Original synthesized approximations; no samples from the recordings. */
 export class SynthAudioEngine {
   private context: AudioContext | null = null;
   private disconnectOutput: (() => void) | null = null;
@@ -35,7 +35,7 @@ export class SynthAudioEngine {
     } catch { return false; }
   }
 
-  play(id: string, midi: number, settings: SynthSettings): boolean {
+  play(id: string, midi: number, settings: SynthSettings, preset: SynthPresetId = "alors-pluck"): boolean {
     if (this.disposed || !Number.isInteger(midi) || midi < 36 || midi > 100) return false;
     const context = this.getContext();
     if (!context || !this.master || context.state === "closed") return false;
@@ -73,19 +73,23 @@ export class SynthAudioEngine {
       wet.gain.value = settings.echo / 100;
       envelope.connect(delay).connect(wet).connect(this.master);
 
-      // Two differently shaped pulse tones and a triangle sub give the pluck
-      // its hollow, reed-like edge and low-end body. Web Audio bandlimits waves.
-      for (const [ratio, width, level, detune] of [[1, 0.6, 0.5, -1.5], [2, 0.7, 0.6, 1.5], [0.5, 0, 0.4, 0]]) {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        voice.oscillators.push(oscillator);
-        voice.nodes.push(gain);
-        oscillator.frequency.value = frequency * ratio;
-        oscillator.detune.value = detune;
-        if (width) oscillator.setPeriodicWave(this.getPulse(context, width));
-        else oscillator.type = "triangle";
-        gain.gain.value = level;
-        oscillator.connect(gain).connect(filter);
+      if (preset === "tokyo-bell") {
+        this.addBellTones(context, voice, filter, frequency, settings, now);
+      } else {
+        // Two differently shaped pulse tones and a triangle sub give the pluck
+        // its hollow, reed-like edge and low-end body. Web Audio bandlimits waves.
+        for (const [ratio, width, level, detune] of [[1, 0.6, 0.5, -1.5], [2, 0.7, 0.6, 1.5], [0.5, 0, 0.4, 0]]) {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          voice.oscillators.push(oscillator);
+          voice.nodes.push(gain);
+          oscillator.frequency.value = frequency * ratio;
+          oscillator.detune.value = detune;
+          if (width) oscillator.setPeriodicWave(this.getPulse(context, width));
+          else oscillator.type = "triangle";
+          gain.gain.value = level;
+          oscillator.connect(gain).connect(filter);
+        }
       }
       voice.oscillators[0].onended = () => {
         if (this.current === voice) {
@@ -176,6 +180,28 @@ export class SynthAudioEngine {
     const wave = context.createPeriodicWave(real, imag);
     this.pulseWaves.set(width, wave);
     return wave;
+  }
+
+  private addBellTones(context: AudioContext, voice: SynthVoice, output: AudioNode, frequency: number, settings: SynthSettings, now: number): void {
+    // Inharmonic FM sidebands give a struck-metal edge. The modulation fades
+    // faster than the body, leaving a softer pitched ring after the attack.
+    for (const [carrierRatio, modulatorRatio, level, depth] of [[1, 2.76, 0.7, 1.8], [2, 5.4, 0.22, 0.6]]) {
+      const carrier = context.createOscillator();
+      const modulator = context.createOscillator();
+      const modulation = context.createGain();
+      const body = context.createGain();
+      voice.oscillators.push(carrier, modulator);
+      voice.nodes.push(modulation, body);
+      carrier.type = modulator.type = "sine";
+      carrier.frequency.value = frequency * carrierRatio;
+      modulator.frequency.value = frequency * modulatorRatio;
+      const amount = frequency * depth * (0.2 + settings.brightness / 100);
+      modulation.gain.setValueAtTime(amount, now);
+      modulation.gain.exponentialRampToValueAtTime(Math.max(0.01, amount * 0.015), now + settings.decay / 1000 * 0.7);
+      body.gain.value = level;
+      modulator.connect(modulation).connect(carrier.frequency);
+      carrier.connect(body).connect(output);
+    }
   }
 
   private disconnectVoice(voice: SynthVoice): void {

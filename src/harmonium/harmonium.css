@@ -26,3 +26,31 @@
 .hinge-setup-dialog button:focus-visible,.hinge-setup-dialog input:focus-visible,.hinge-setup-dialog summary:focus-visible { outline:2px solid #d5b88b; outline-offset:4px; }
 
 .hinge-inline-link { border:0; border-bottom:1px solid currentColor; padding:0; background:none; color:inherit; font:inherit; cursor:pointer; }
+
+.harmonium-sensor-entry { display:grid; grid-template-columns:minmax(0, 1fr) auto; align-items:center; gap:10px 20px; padding:16px 18px; margin-top:14px; border:1px solid #697586; border-radius:8px; background:#202a38; }
+.harmonium-sensor-copy h3 { margin:0 0 5px; font-size:16px; font-weight:750; color:#f3f5f8; }
+.harmonium-sensor-copy p { margin:0; max-width:65ch; color:#d0d8e3; font-size:12px; line-height:1.6; }
+.harmonium-sensor-entry-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.harmonium-sensor-entry-actions .piano-action { min-height:40px; height:auto; padding:10px 14px; font-size:13px; font-weight:700; }
+.harmonium-sensor-entry .harmonium-connect { background:#f4bd67; border-color:#f4bd67; color:#241c0f; }
+.harmonium-sensor-entry .harmonium-connect:hover { background:#ffd394; border-color:#ffd394; }
+.harmonium-sensor-entry-status { grid-column:1 / -1; margin:0; color:#d0d8e3; font-size:12px; line-height:1.6; }
+.harmonium-experience .harmonium-modes .piano-action { min-height:38px; height:auto; padding:9px 13px; font-size:13px; font-weight:650; }
+.harmonium-experience .harmonium-modes .piano-action[aria-pressed="true"] { background:#f4bd67; border-color:#f4bd67; color:#241c0f; }
+.harmonium-experience .harmonium-mode-hint, .harmonium-experience .harmonium-pressure p { font-size:13px; }
+.harmonium-experience .harmonium-pump { min-height:42px; height:auto; font-size:13px; letter-spacing:0; background:#f4bd67; border-color:#f4bd67; color:#241c0f; }
+.harmonium-experience .harmonium-pump span { color:#45351e; font-size:11px; }
+.harmonium-experience .harmonium-pump.is-pumping { background:#ffd394; border-color:#ffd394; color:#241c0f; }
+.harmonium-experience .harmonium-pressure { border-radius:7px; }
+.harmonium-experience .harmonium-folds { height:24px; }
+.harmonium-bellows-options { padding:0 0 14px; }
+.harmonium-bellows-options summary { padding:11px 14px; border:1px solid #657284; border-radius:6px; background:#222b38; color:#f1f4f8; font-size:13px; font-weight:650; cursor:pointer; }
+.harmonium-bellows-options summary span { padding-left:12px; color:#bac5d5; font-size:12px; font-weight:400; }
+.harmonium-bellows-options .harmonium-bellows-settings { padding:14px; }
+.harmonium-bellows-options .harmonium-bellows-settings label { font-size:13px; }
+.harmonium-sensor-entry button:focus-visible, .harmonium-bellows-options summary:focus-visible { outline:2px solid #ffd394; outline-offset:4px; }
+.hinge-setup-dialog .piano-action { min-height:40px; height:auto; padding:10px 14px; border-color:#708098; background:#293445; color:#f1f4f8; font-size:13px; }
+.hinge-setup-flow > li:nth-child(2) .hinge-inline-actions > .piano-action:first-child:not(:disabled), .hinge-dialog-footer > .piano-action:not(:disabled) { background:#f4bd67; border-color:#f4bd67; color:#241c0f; font-weight:700; }
+@media (max-width:760px) {
+  .harmonium-sensor-entry { grid-template-columns:minmax(0, 1fr); }
+}

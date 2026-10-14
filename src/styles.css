@@ -252,6 +252,9 @@ footer { display: flex; justify-content: space-between; padding: 19px 0 24px; co
 .synth-instrument { background: linear-gradient(120deg, #292c25, #171e1a 55%, #242b23); }
 .synth-panel { display: grid; grid-template-columns: 1fr 1.25fr; align-items: center; gap: 32px; padding: 24px 0; }
 .synth-kicker { color: #bca17e; font-size: 9px; font-weight: 800; letter-spacing: .16em; }
+.synth-preset-options { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+.synth-preset-options button { font-size: 10px; }
+.synth-preset-options button[aria-pressed="true"] { border-color: #d5aa77; background: #3b3628; color: #f2dab7; }
 .synth-preset h1 { margin: 7px 0 8px; font-family: Georgia, serif; font-size: 29px; font-weight: 400; letter-spacing: -.025em; }
 .synth-preset p { max-width: 380px; margin-bottom: 13px; color: #a5ac9e; font-size: 11px; line-height: 1.7; }
 .synth-reset { font-size: 9px; font-weight: 800; letter-spacing: .1em; }

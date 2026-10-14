@@ -113,9 +113,9 @@ export class GuitarController {
 
   private onKeyUp = (event: KeyboardEvent): void => {
     const { code } = event;
-    if (!this.isMapped(code)) return;
+    // Leave control-owned releases available for native button/accordion actions.
+    if (!this.pressed.delete(code)) return;
     event.preventDefault();
-    this.pressed.delete(code);
     this.removeHeld(this.heldFrets, code);
     this.removeHeld(this.heldChords, code);
 

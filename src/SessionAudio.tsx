@@ -91,21 +91,26 @@ export function SessionAudio() {
         <input type="range" min="0" max="100" step="1" value={Math.round(volume * 100)}
           onChange={(event) => setOutputVolume(Number(event.target.value) / 100)} />
       </label>
-      <div className="session-record-controls">
-        <button type="button" className="piano-action" onClick={stopStudioSound}>Stop sound <span>Esc</span></button>
-        <button type="button" className={`piano-action${recording ? " session-record-live" : ""}`}
-          disabled={!supported} onClick={() => recording ? recorder.current?.stop() : startRecording()}>
-          <span className="session-record-dot" aria-hidden="true" />{recording ? "Stop recording" : "Record a take"}
-        </button>
-        <span className="session-record-time">{recording ? `${duration(elapsed)} / 3:00` : "Up to 3 minutes · no microphone"}</span>
-      </div>
+      <button type="button" className="piano-action session-stop" onClick={stopStudioSound}>Stop sound <span>Esc</span></button>
+      <details className="session-recording">
+        <summary>{recording ? `Recording · ${duration(elapsed)} / 3:00` : "Record & listen back"}</summary>
+        <div className="session-record-panel">
+          <div className="session-record-controls">
+            <button type="button" className={`piano-action${recording ? " session-record-live" : ""}`}
+              disabled={!supported} onClick={() => recording ? recorder.current?.stop() : startRecording()}>
+              <span className="session-record-dot" aria-hidden="true" />{recording ? "Stop recording" : "Record a take"}
+            </button>
+            <span className="session-record-time">{recording ? `${duration(elapsed)} / 3:00` : "Up to 3 minutes · no microphone"}</span>
+          </div>
+          {take && <div className="session-last-take">
+            <span>Last take</span>
+            <audio ref={playback} src={take.url} controls preload="metadata" aria-label="Play your last take" />
+            <a href={take.url} download={`nerdboard-take.${take.extension}`} className="piano-action">Download</a>
+            <button type="button" className="piano-action" disabled={recording} onClick={deleteTake}>Delete</button>
+          </div>}
+        </div>
+      </details>
     </div>
-    {take && <div className="session-last-take">
-      <span>Last take</span>
-      <audio ref={playback} src={take.url} controls preload="metadata" aria-label="Play your last take" />
-      <a href={take.url} download={`nerdboard-take.${take.extension}`} className="piano-action">Download</a>
-      <button type="button" className="piano-action" disabled={recording} onClick={deleteTake}>Delete</button>
-    </div>}
     <p className={`session-audio-note${!message && supported ? " is-empty" : ""}`} role="status">
       {!supported ? "Recording is unavailable in this browser. Instrument volume still works."
         : message}
